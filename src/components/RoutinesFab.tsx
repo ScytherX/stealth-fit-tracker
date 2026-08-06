@@ -328,13 +328,31 @@ function RoutineEditor({
         </div>
 
         <DialogFooter>
-          <Button
-            className="w-full"
-            disabled={!name.trim() || items.length === 0}
-            onClick={() => onSave({ ...routine, name: name.trim(), items })}
-          >
-            Guardar rutina
-          </Button>
+          <div className="grid w-full gap-2">
+            {items.length === 0 || !name.trim() ? (
+              <p className="text-xs text-muted-foreground">
+                {items.length === 0
+                  ? "Agrega al menos un ejercicio para guardar la rutina."
+                  : "Escribe un nombre para la rutina."}
+              </p>
+            ) : null}
+            <Button
+              className="w-full"
+              onClick={() => {
+                if (items.length === 0) {
+                  toast.error("Agrega al menos un ejercicio");
+                  return;
+                }
+                if (!name.trim()) {
+                  toast.error("Ponle un nombre a la rutina");
+                  return;
+                }
+                onSave({ ...routine, name: name.trim(), items });
+              }}
+            >
+              Guardar rutina
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
