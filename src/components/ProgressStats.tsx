@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Dumbbell, Flame, Trophy, CalendarDays } from "lucide-react";
 
-import type { LogEntry } from "@/lib/gym-store";
+import { logVolume, type LogEntry } from "@/lib/gym-store";
 
 function dayKey(iso: string) {
   return new Date(iso).toLocaleDateString("sv-SE");
@@ -27,10 +27,7 @@ function streak(logs: LogEntry[]) {
 export function ProgressStats({ logs }: { logs: LogEntry[] }) {
   const stats = useMemo(() => {
     const strength = logs.filter((l) => l.category !== "Cardio");
-    const volume = strength.reduce(
-      (sum, l) => sum + (l.weight ?? 0) * (l.sets ?? 0) * (l.reps ?? 0),
-      0,
-    );
+    const volume = strength.reduce((sum, l) => sum + logVolume(l), 0);
     const best = strength.reduce<LogEntry | undefined>(
       (top, l) => ((l.weight ?? 0) > (top?.weight ?? 0) ? l : top),
       undefined,
