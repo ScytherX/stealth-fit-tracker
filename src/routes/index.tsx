@@ -29,6 +29,7 @@ import {
   type Category,
 } from "@/lib/gym-store";
 import { WorkoutCalendar } from "@/components/WorkoutCalendar";
+import { RoutinesFab } from "@/components/RoutinesFab";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -335,6 +336,8 @@ function RegistroPage() {
           </ul>
         </section>
       )}
+
+      <RoutinesFab date={date} />
     </main>
   );
 }
