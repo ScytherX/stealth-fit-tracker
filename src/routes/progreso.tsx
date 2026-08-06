@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useLogs } from "@/lib/gym-store";
+import { ProgressStats } from "@/components/ProgressStats";
 
 export const Route = createFileRoute("/progreso")({
   head: () => ({
@@ -89,6 +90,8 @@ function ProgresoPage() {
       <p className="mt-1 text-sm text-muted-foreground">
         Evolución de tu rendimiento a lo largo del tiempo.
       </p>
+
+      <ProgressStats logs={logs} />
 
       <div className="mt-6 grid gap-2">
         <Label>Ejercicio</Label>
