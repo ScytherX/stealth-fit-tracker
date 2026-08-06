@@ -53,6 +53,7 @@ export const DEFAULT_EXERCISES: Exercise[] = [
 
 const EX_KEY = "gymlog.customExercises.v1";
 const LOG_KEY = "gymlog.logs.v1";
+const ROUTINE_KEY = "gymlog.routines.v1";
 
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -146,6 +147,63 @@ export function useLogs() {
 }
 
 export function describeLog(l: LogEntry) {
+  const rest = l.rest != null ? ` · descanso ${l.rest}s` : "";
+  if (l.category === "Cardio") {
+    return `${l.minutes ?? 0} min · ${l.speed ?? 0} km/h · ${l.incline ?? 0}% inclinación${rest}`;
+  }
+  return `${l.weight ?? 0} kg · ${l.sets ?? 0} series × ${l.reps ?? 0} reps${rest}`;
+}
+
+export type RoutineItem = {
+  id: string;
+  exerciseId: string;
+  exerciseName: string;
+  category: Category;
+  weight?: number | undefined;
+  sets?: number | undefined;
+  reps?: number | undefined;
+  minutes?: number | undefined;
+  speed?: number | undefined;
+  incline?: number | undefined;
+  rest?: number | undefined;
+};
+
+export type Routine = {
+  id: string;
+  name: string;
+  items: RoutineItem[];
+};
+
+export function useRoutines() {
+  const [routines, setRoutines] = useStoreValue<Routine[]>(ROUTINE_KEY, []);
+
+  const saveRoutine = useCallback(
+    (routine: Routine) => {
+      const exists = routines.some((r) => r.id === routine.id);
+      setRoutines(
+        exists ? routines.map((r) => (r.id === routine.id ? routine : r)) : [...routines, routine],
+      );
+    },
+    [routines, setRoutines],
+  );
+
+  const removeRoutine = useCallback(
+    (id: string) => setRoutines(routines.filter((r) => r.id !== id)),
+    [routines, setRoutines],
+  );
+
+  return { routines, saveRoutine, removeRoutine };
+}
+
+export function describeRoutineItem(i: RoutineItem) {
+  const rest = i.rest != null ? ` · descanso ${i.rest}s` : "";
+  if (i.category === "Cardio") {
+    return `${i.minutes ?? 0} min · ${i.speed ?? 0} km/h · ${i.incline ?? 0}%${rest}`;
+  }
+  return `${i.weight ?? 0} kg · ${i.sets ?? 0} × ${i.reps ?? 0}${rest}`;
+}
+
+function legacyDescribeLog(l: LogEntry) {
   const rest = l.rest != null ? ` · descanso ${l.rest}s` : "";
   if (l.category === "Cardio") {
     return `${l.minutes ?? 0} min · ${l.speed ?? 0} km/h · ${l.incline ?? 0}% inclinación${rest}`;
