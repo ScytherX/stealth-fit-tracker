@@ -169,14 +169,6 @@ export function logVolume(l: LogEntry) {
   return weight * sets * reps;
 }
 
-function describeLogLegacy(l: LogEntry) {
-  const rest = l.rest != null ? ` · descanso ${l.rest}s` : "";
-  if (l.category === "Cardio") {
-    return `${l.minutes ?? 0} min · ${l.speed ?? 0} km/h · ${l.incline ?? 0}% inclinación${rest}`;
-  }
-  return `${l.weight ?? 0} kg · ${l.sets ?? 0} series × ${l.reps ?? 0} reps${rest}`;
-}
-
 export type RoutineItem = {
   id: string;
   exerciseId: string;
