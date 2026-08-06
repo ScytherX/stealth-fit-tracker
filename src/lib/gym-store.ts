@@ -130,6 +130,12 @@ export function useLogs() {
     [logs, setLogs],
   );
 
+  const addLogs = useCallback(
+    (entries: Omit<LogEntry, "id">[]) =>
+      setLogs([...entries.map((e) => ({ ...e, id: uid() })).reverse(), ...logs]),
+    [logs, setLogs],
+  );
+
   const removeLog = useCallback(
     (id: string) => setLogs(logs.filter((l) => l.id !== id)),
     [logs, setLogs],
@@ -143,7 +149,7 @@ export function useLogs() {
     [logs],
   );
 
-  return { logs, addLog, removeLog, lastFor };
+  return { logs, addLog, addLogs, removeLog, lastFor };
 }
 
 export function describeLog(l: LogEntry) {
