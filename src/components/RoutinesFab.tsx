@@ -182,6 +182,17 @@ function RoutineEditor({
   const [incline, setIncline] = useState("");
   const [rest, setRest] = useState("");
 
+  const invalid = (v: string, { required = true, min = 1 } = {}) => {
+    if (v.trim() === "") return required;
+    const n = Number(v);
+    return Number.isNaN(n) || n < min;
+  };
+
+  const fieldsInvalid = isCardio
+    ? invalid(minutes) || invalid(speed) || invalid(incline, { required: false, min: 0 })
+    : invalid(weight) || invalid(sets) || invalid(reps);
+  const canAdd = !!current && !fieldsInvalid && !invalid(rest, { required: false });
+
   function changeCategory(c: Category) {
     setCategory(c);
     setExerciseId(exercises.find((e) => e.category === c)?.id ?? "");
@@ -305,9 +316,14 @@ function RoutineEditor({
             </div>
             <MiniField label="Descanso (seg, opcional)" value={rest} onChange={setRest} />
 
-            <Button variant="secondary" className="gap-2" onClick={addItem} disabled={!current}>
+            <Button variant="secondary" className="gap-2" onClick={addItem} disabled={!canAdd}>
               <Plus className="size-4" /> Agregar ejercicio
             </Button>
+            {!fieldsInvalid ? null : (
+              <p className="text-xs text-muted-foreground">
+                Completa los valores con un número igual o mayor a 1.
+              </p>
+            )}
           </div>
         </div>
 
