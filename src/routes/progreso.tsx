@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useLogs } from "@/lib/gym-store";
+import { logVolume, useLogs } from "@/lib/gym-store";
 import { ProgressStats } from "@/components/ProgressStats";
 
 export const Route = createFileRoute("/progreso")({
@@ -69,7 +69,7 @@ function ProgresoPage() {
           month: "short",
         }),
         peso: l.weight ?? 0,
-        volumen: (l.weight ?? 0) * (l.sets ?? 0) * (l.reps ?? 0),
+        volumen: logVolume(l),
         minutes: l.minutes ?? 0,
         speed: l.speed ?? 0,
         cardio: l.category === "Cardio",
@@ -173,7 +173,7 @@ function ProgresoPage() {
                   <Line
                     type="monotone"
                     dataKey="volumen"
-                    name="Volumen total"
+                    name="Volumen (kg)"
                     stroke="var(--accent)"
                     strokeWidth={2}
                     strokeDasharray="4 4"
