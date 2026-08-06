@@ -160,6 +160,23 @@ export function describeLog(l: LogEntry) {
   return `${l.weight ?? 0} kg · ${l.sets ?? 0} series × ${l.reps ?? 0} reps${rest}`;
 }
 
+/** Volumen de un registro de fuerza: peso × series × reps (0 para cardio). */
+export function logVolume(l: LogEntry) {
+  if (l.category === "Cardio") return 0;
+  const weight = l.weight ?? 0;
+  const sets = l.sets && l.sets > 0 ? l.sets : 1;
+  const reps = l.reps && l.reps > 0 ? l.reps : 1;
+  return weight * sets * reps;
+}
+
+function describeLogLegacy(l: LogEntry) {
+  const rest = l.rest != null ? ` · descanso ${l.rest}s` : "";
+  if (l.category === "Cardio") {
+    return `${l.minutes ?? 0} min · ${l.speed ?? 0} km/h · ${l.incline ?? 0}% inclinación${rest}`;
+  }
+  return `${l.weight ?? 0} kg · ${l.sets ?? 0} series × ${l.reps ?? 0} reps${rest}`;
+}
+
 export type RoutineItem = {
   id: string;
   exerciseId: string;
