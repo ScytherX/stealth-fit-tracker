@@ -4,8 +4,8 @@ import { Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WorkoutCalendar } from "@/components/WorkoutCalendar";
 import {
   Select,
   SelectContent,
@@ -88,11 +88,10 @@ function HistorialPage() {
       <div className="mt-4 grid gap-2">
         <Label>Ver un día específico</Label>
         <div className="flex gap-2">
-          <Input
-            type="date"
-            value={day}
-            onChange={(e) => setDay(e.target.value)}
-            className="h-12 rounded-xl"
+          <WorkoutCalendar
+            value={day || new Date().toLocaleDateString("sv-SE")}
+            onChange={setDay}
+            className={day ? "" : "text-muted-foreground"}
           />
           {day && (
             <Button variant="secondary" className="h-12 rounded-xl" onClick={() => setDay("")}>
