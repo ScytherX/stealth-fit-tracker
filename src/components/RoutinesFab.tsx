@@ -36,7 +36,7 @@ const num = (v: string) => (v.trim() === "" ? undefined : Number(v));
 export function RoutinesFab({ date }: { date: string }) {
   const { exercises } = useExercises();
   const { routines, saveRoutine, removeRoutine } = useRoutines();
-  const { addLog } = useLogs();
+  const { addLogs } = useLogs();
 
   const [listOpen, setListOpen] = useState(false);
   const [draft, setDraft] = useState<Routine | null>(null);
@@ -55,8 +55,8 @@ export function RoutinesFab({ date }: { date: string }) {
       now.getHours(),
       now.getMinutes(),
     );
-    routine.items.forEach((i) => {
-      addLog({
+    addLogs(
+      routine.items.map((i) => ({
         date: when.toISOString(),
         exerciseId: i.exerciseId,
         exerciseName: i.exerciseName,
@@ -65,8 +65,8 @@ export function RoutinesFab({ date }: { date: string }) {
         ...(i.category === "Cardio"
           ? { minutes: i.minutes, speed: i.speed, incline: i.incline }
           : { weight: i.weight, sets: i.sets, reps: i.reps }),
-      });
-    });
+      })),
+    );
     setListOpen(false);
     toast.success("Rutina registrada", {
       description: `${routine.name} · ${routine.items.length} ejercicios`,
