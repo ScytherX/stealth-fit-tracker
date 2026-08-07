@@ -40,6 +40,10 @@ export function AppHeader() {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [open]);
 
+  useLayoutEffect(() => {
+    console.log("LAYOUT EFFECT RUNNING");
+  }, []);
+
   useEffect(() => {
     console.log("EFFECT RUNNING", openButtonRef.current);
     const btn = openButtonRef.current;
