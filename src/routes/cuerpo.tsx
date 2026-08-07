@@ -124,13 +124,26 @@ function CuerpoPage() {
               step="0.1"
               invalid={weightInvalid}
             />
-            <NumField label="Altura (cm)" value={height} onChange={setHeight} step="0.5" />
-            <NumField label="Grasa corporal (%)" value={bodyFat} onChange={setBodyFat} step="0.1" />
+            <NumField
+              label="Altura (cm)"
+              value={height}
+              onChange={setHeight}
+              step="0.5"
+              invalid={heightInvalid}
+            />
+            <NumField
+              label="Grasa corporal (%)"
+              value={bodyFat}
+              onChange={setBodyFat}
+              step="0.1"
+              invalid={bodyFatInvalid}
+            />
             <NumField
               label="Masa muscular (%)"
               value={muscleMass}
               onChange={setMuscleMass}
               step="0.1"
+              invalid={muscleMassInvalid}
             />
           </div>
 
