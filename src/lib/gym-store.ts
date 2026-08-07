@@ -212,10 +212,6 @@ export function useRoutines() {
 }
 
 export function describeRoutineItem(i: RoutineItem) {
-  return describeRoutineItemImpl(i);
-}
-
-function describeRoutineItemImpl(i: RoutineItem) {
   const rest = i.rest != null ? ` · descanso ${i.rest}s` : "";
   if (i.category === "Cardio") {
     return `${i.minutes ?? 0} min · ${i.speed ?? 0} km/h · ${i.incline ?? 0}%${rest}`;
