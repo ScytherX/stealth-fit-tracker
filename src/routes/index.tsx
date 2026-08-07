@@ -30,6 +30,7 @@ import {
 } from "@/lib/gym-store";
 import { WorkoutCalendar } from "@/components/WorkoutCalendar";
 import { RoutinesFab } from "@/components/RoutinesFab";
+import { BodyWeightButton } from "@/components/BodyWeightButton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -167,11 +168,14 @@ function RegistroPage() {
 
   return (
     <main className="mx-auto w-full max-w-lg px-4 pt-8">
-      <header className="mb-6">
-        <h1 className="text-3xl font-extrabold">Registrar entrenamiento</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Lleva el control de tus rutinas y progreso.
-        </p>
+      <header className="mb-6 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-extrabold">Registrar entrenamiento</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Lleva el control de tus rutinas y progreso.
+          </p>
+        </div>
+        <BodyWeightButton date={date} />
       </header>
 
       <section className="rounded-3xl border border-border bg-card p-5 shadow-lg">

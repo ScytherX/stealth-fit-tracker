@@ -54,6 +54,7 @@ export const DEFAULT_EXERCISES: Exercise[] = [
 const EX_KEY = "gymlog.customExercises.v1";
 const LOG_KEY = "gymlog.logs.v1";
 const ROUTINE_KEY = "gymlog.routines.v1";
+const BODYWEIGHT_KEY = "gymlog.bodyweights.v1";
 
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -216,6 +217,31 @@ export function describeRoutineItem(i: RoutineItem) {
     return `${i.minutes ?? 0} min · ${i.speed ?? 0} km/h · ${i.incline ?? 0}%${rest}`;
   }
   return `${i.weight ?? 0} kg · ${i.sets ?? 0} × ${i.reps ?? 0}${rest}`;
+}
+
+export type BodyWeightEntry = {
+  id: string;
+  date: string;
+  weight: number;
+};
+
+export function useBodyWeights() {
+  const [entries, setEntries] = useStoreValue<BodyWeightEntry[]>(BODYWEIGHT_KEY, []);
+
+  const addBodyWeight = useCallback(
+    (weight: number, date: string) =>
+      setEntries([{ id: uid(), date, weight }, ...entries]),
+    [entries, setEntries],
+  );
+
+  const removeBodyWeight = useCallback(
+    (id: string) => setEntries(entries.filter((e) => e.id !== id)),
+    [entries, setEntries],
+  );
+
+  const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+
+  return { bodyWeights: sorted, latest: sorted[0], addBodyWeight, removeBodyWeight };
 }
 
 export function toCSV(logs: LogEntry[]) {
