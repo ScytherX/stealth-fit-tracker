@@ -20,11 +20,6 @@ export function AppHeader() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/85 backdrop-blur-xl">
       <input id="nav-toggle" type="checkbox" className="sr-only" />
 
-      <style>{`
-        #nav-toggle:checked ~ #nav-drawer { transform: translateX(0); }
-        #nav-toggle:checked ~ #nav-overlay { pointer-events: auto; background-color: rgba(0,0,0,0.5); opacity: 1; }
-      `}</style>
-
       <div className="mx-auto flex h-14 max-w-lg items-center px-4">
         <label
           htmlFor="nav-toggle"
