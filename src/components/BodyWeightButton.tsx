@@ -20,11 +20,18 @@ export function BodyWeightButton({ date }: { date: string }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
 
-  const n = Number(value);
-  const invalid = value.trim() === "" || !Number.isFinite(n) || n < 1;
+  const normalized = value.trim().replace(",", ".");
+  const n = Number(normalized);
+  const empty = normalized === "";
+  const invalid = empty || !Number.isFinite(n) || n < 1;
 
   function handleSave() {
-    if (invalid) return;
+    if (invalid) {
+      toast.error("Peso inválido", {
+        description: "Escribe un número igual o mayor a 1.",
+      });
+      return;
+    }
     addBodyWeight(n, new Date(`${date}T12:00:00`).toISOString());
     setValue("");
     setOpen(false);
@@ -57,15 +64,15 @@ export function BodyWeightButton({ date }: { date: string }) {
             step="0.1"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            aria-invalid={invalid && value.trim() !== ""}
+            aria-invalid={invalid && !empty}
             className={
               "h-12 rounded-xl text-center text-lg font-semibold " +
-              (invalid && value.trim() !== ""
+              (invalid && !empty
                 ? "border-destructive text-destructive ring-2 ring-destructive/40 focus-visible:ring-destructive"
                 : "")
             }
           />
-          {invalid && (
+          {invalid && !empty && (
             <p className="text-xs font-medium text-destructive">
               El peso debe ser un número igual o mayor a 1.
             </p>
@@ -98,7 +105,7 @@ export function BodyWeightButton({ date }: { date: string }) {
         )}
 
         <DialogFooter>
-          <Button onClick={handleSave} disabled={invalid} className="w-full rounded-xl">
+          <Button onClick={handleSave} className="w-full rounded-xl">
             Registrar peso
           </Button>
         </DialogFooter>
