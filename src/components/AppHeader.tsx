@@ -93,6 +93,11 @@ export function AppHeader() {
         className="pointer-events-none fixed inset-0 z-[55] bg-black/0 opacity-0 backdrop-blur-sm transition-opacity"
         aria-hidden="true"
       />
+
+      <style>{`
+        #nav-toggle:checked ~ #nav-drawer { transform: translateX(0); }
+        #nav-toggle:checked ~ #nav-overlay { pointer-events: auto; background-color: rgba(0,0,0,0.5); opacity: 1; }
+      `}</style>
     </header>
   );
 }
