@@ -73,7 +73,9 @@ function CuerpoPage() {
 
   function handleSave() {
     if (!canSave) {
-      toast.error("Peso inválido", { description: "Escribe un número igual o mayor a 1." });
+      toast.error("Campos incompletos", {
+        description: "Todos los campos deben tener un número igual o mayor a 1.",
+      });
       return;
     }
     const now = new Date();
@@ -88,10 +90,10 @@ function CuerpoPage() {
     addBodyWeight({
       date: when.toISOString(),
       weight: w,
-      ...(h != null ? { height: h } : {}),
-      ...(bmi != null ? { bmi } : {}),
-      ...(num(bodyFat) != null ? { bodyFat: num(bodyFat) } : {}),
-      ...(num(muscleMass) != null ? { muscleMass: num(muscleMass) } : {}),
+      height: h,
+      bmi,
+      bodyFat: bf,
+      muscleMass: mm,
     });
     toast.success("Medición registrada", {
       description: `${w} kg · ${when.toLocaleDateString("es-MX")}`,
