@@ -1,10 +1,18 @@
-import { useState } from "react";
-import { Scale, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CalendarIcon, Scale, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -15,10 +23,22 @@ import {
 } from "@/components/ui/dialog";
 import { useBodyWeights } from "@/lib/gym-store";
 
+function toKey(d: Date) {
+  return format(d, "yyyy-MM-dd");
+}
+
 export function BodyWeightButton({ date }: { date: string }) {
   const { bodyWeights, latest, addBodyWeight, removeBodyWeight } = useBodyWeights();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date>(
+    () => new Date(`${date}T12:00:00`),
+  );
+  const [dateOpen, setDateOpen] = useState(false);
+
+  useEffect(() => {
+    if (open) setSelectedDate(new Date(`${date}T12:00:00`));
+  }, [open, date]);
 
   const normalized = value.trim().replace(",", ".");
   const n = Number(normalized);
@@ -32,10 +52,12 @@ export function BodyWeightButton({ date }: { date: string }) {
       });
       return;
     }
-    addBodyWeight(n, new Date(`${date}T12:00:00`).toISOString());
+    addBodyWeight(n, new Date(`${toKey(selectedDate)}T12:00:00`).toISOString());
     setValue("");
     setOpen(false);
-    toast.success("Peso corporal registrado", { description: `${n} kg` });
+    toast.success("Peso corporal registrado", {
+      description: `${n} kg · ${format(selectedDate, "d 'de' MMMM yyyy", { locale: es })}`,
+    });
   }
 
   return (
@@ -56,6 +78,32 @@ export function BodyWeightButton({ date }: { date: string }) {
           <DialogTitle>Registrar peso corporal</DialogTitle>
         </DialogHeader>
         <div className="grid gap-2">
+          <Label className="text-xs text-muted-foreground">Fecha del pesaje</Label>
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-12 w-full justify-start gap-2 rounded-xl text-left font-normal"
+              >
+                <CalendarIcon className="size-4 text-primary" />
+                {format(selectedDate, "EEEE d 'de' MMMM yyyy", { locale: es })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => {
+                  if (d) setSelectedDate(d);
+                  setDateOpen(false);
+                }}
+                locale={es}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+
           <Label className="text-xs text-muted-foreground">Peso (kg)</Label>
           <Input
             type="number"
