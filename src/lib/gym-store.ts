@@ -223,14 +223,29 @@ export type BodyWeightEntry = {
   id: string;
   date: string;
   weight: number;
+  /** Altura en cm, usada para calcular el IMC. */
+  height?: number | undefined;
+  /** Índice de masa corporal. */
+  bmi?: number | undefined;
+  /** Grasa corporal en %. */
+  bodyFat?: number | undefined;
+  /** Masa muscular en kg. */
+  muscleMass?: number | undefined;
 };
+
+/** IMC = peso (kg) / altura (m)². */
+export function computeBMI(weight: number, heightCm: number) {
+  if (!weight || !heightCm) return undefined;
+  const m = heightCm / 100;
+  return Math.round((weight / (m * m)) * 10) / 10;
+}
 
 export function useBodyWeights() {
   const [entries, setEntries] = useStoreValue<BodyWeightEntry[]>(BODYWEIGHT_KEY, []);
 
   const addBodyWeight = useCallback(
-    (weight: number, date: string) =>
-      setEntries([{ id: uid(), date, weight }, ...entries]),
+    (entry: Omit<BodyWeightEntry, "id">) =>
+      setEntries([{ ...entry, id: uid() }, ...entries]),
     [entries, setEntries],
   );
 

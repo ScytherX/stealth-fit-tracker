@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CuerpoRouteImport } from './routes/cuerpo'
 import { Route as DiaRouteImport } from './routes/dia'
 import { Route as HistorialRouteImport } from './routes/historial'
 import { Route as ProgresoRouteImport } from './routes/progreso'
@@ -17,6 +18,11 @@ import { Route as ProgresoRouteImport } from './routes/progreso'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuerpoRoute = CuerpoRouteImport.update({
+  id: '/cuerpo',
+  path: '/cuerpo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiaRoute = DiaRouteImport.update({
@@ -37,12 +43,14 @@ const ProgresoRoute = ProgresoRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cuerpo': typeof CuerpoRoute
   '/dia': typeof DiaRoute
   '/historial': typeof HistorialRoute
   '/progreso': typeof ProgresoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cuerpo': typeof CuerpoRoute
   '/dia': typeof DiaRoute
   '/historial': typeof HistorialRoute
   '/progreso': typeof ProgresoRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cuerpo': typeof CuerpoRoute
   '/dia': typeof DiaRoute
   '/historial': typeof HistorialRoute
   '/progreso': typeof ProgresoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dia' | '/historial' | '/progreso'
+  fullPaths: '/' | '/cuerpo' | '/dia' | '/historial' | '/progreso'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dia' | '/historial' | '/progreso'
-  id: '__root__' | '/' | '/dia' | '/historial' | '/progreso'
+  to: '/' | '/cuerpo' | '/dia' | '/historial' | '/progreso'
+  id: '__root__' | '/' | '/cuerpo' | '/dia' | '/historial' | '/progreso'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CuerpoRoute: typeof CuerpoRoute
   DiaRoute: typeof DiaRoute
   HistorialRoute: typeof HistorialRoute
   ProgresoRoute: typeof ProgresoRoute
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuerpo': {
+      id: '/cuerpo'
+      path: '/cuerpo'
+      fullPath: '/cuerpo'
+      preLoaderRoute: typeof CuerpoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dia': {
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CuerpoRoute: CuerpoRoute,
   DiaRoute: DiaRoute,
   HistorialRoute: HistorialRoute,
   ProgresoRoute: ProgresoRoute,
@@ -111,13 +129,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

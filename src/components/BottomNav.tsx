@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Dumbbell, LineChart, History, CalendarDays } from "lucide-react";
+import { Dumbbell, LineChart, History, CalendarDays, HeartPulse } from "lucide-react";
 
 const items = [
-  { to: "/", label: "Registrar", icon: Dumbbell },
+  { to: "/", label: "Ejercicios", icon: Dumbbell },
+  { to: "/cuerpo", label: "Cuerpo", icon: HeartPulse },
   { to: "/dia", label: "Por día", icon: CalendarDays },
   { to: "/progreso", label: "Progreso", icon: LineChart },
   { to: "/historial", label: "Historial", icon: History },
