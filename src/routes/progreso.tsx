@@ -200,6 +200,56 @@ function ProgresoPage() {
           </div>
         )}
       </section>
+
+      <section className="mt-6 rounded-3xl border border-border bg-card p-4">
+        <h2 className="text-lg font-bold">Peso corporal</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Fluctuación de tu peso corporal a lo largo del tiempo.
+        </p>
+        {bodySeries.length === 0 ? (
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            Registra tu peso corporal para ver la gráfica.
+          </p>
+        ) : (
+          <div className="mt-4 h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={bodySeries} margin={{ top: 12, right: 8, left: -16, bottom: 0 }}>
+                <CartesianGrid stroke="var(--border)" vertical={false} />
+                <XAxis
+                  dataKey="fecha"
+                  stroke="var(--muted-foreground)"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="var(--muted-foreground)"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={["dataMin - 2", "dataMax + 2"]}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--popover)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    color: "var(--popover-foreground)",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="peso"
+                  name="Peso corporal (kg)"
+                  stroke="var(--primary)"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: "var(--primary)" }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </section>
     </main>
   );
 }
