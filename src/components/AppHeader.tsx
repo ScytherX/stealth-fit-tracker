@@ -18,10 +18,10 @@ export function AppHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-lg items-center px-4">
-        {/* Hidden checkbox toggles the drawer via CSS */}
-        <input id="nav-toggle" type="checkbox" className="peer sr-only" />
+      {/* Hidden checkbox must be a sibling before the drawer for peer-* to work */}
+      <input id="nav-toggle" type="checkbox" className="peer sr-only" />
 
+      <div className="mx-auto flex h-14 max-w-lg items-center px-4">
         <label
           htmlFor="nav-toggle"
           className="-ml-2 inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent"
@@ -36,7 +36,7 @@ export function AppHeader() {
         </span>
       </div>
 
-      {/* Drawer - controlled by the checkbox state */}
+      {/* Drawer controlled by the checkbox state */}
       <div
         id="nav-drawer"
         role="dialog"
@@ -66,7 +66,6 @@ export function AppHeader() {
                   <Link
                     to={to}
                     onClick={() => {
-                      // Uncheck the toggle to close the drawer when JS is available
                       const toggle = document.getElementById("nav-toggle") as HTMLInputElement | null;
                       if (toggle) toggle.checked = false;
                     }}
@@ -92,7 +91,7 @@ export function AppHeader() {
         </div>
       </div>
 
-      {/* Overlay - visible only when the drawer is open */}
+      {/* Overlay visible only when the drawer is open */}
       <label
         htmlFor="nav-toggle"
         className="pointer-events-none fixed inset-0 z-[55] bg-black/0 opacity-0 backdrop-blur-sm transition-opacity peer-checked:pointer-events-auto peer-checked:bg-black/50 peer-checked:opacity-100"
