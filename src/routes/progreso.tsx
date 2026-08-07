@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { logVolume, useLogs } from "@/lib/gym-store";
+import { logVolume, useBodyWeights, useLogs } from "@/lib/gym-store";
 import { ProgressStats } from "@/components/ProgressStats";
 
 export const Route = createFileRoute("/progreso")({
@@ -45,6 +45,7 @@ type CardioMetric = "minutes" | "speed";
 
 function ProgresoPage() {
   const { logs } = useLogs();
+  const { bodyWeights } = useBodyWeights();
   const [exerciseId, setExerciseId] = useState("");
   const [metric, setMetric] = useState<CardioMetric>("minutes");
 
@@ -75,6 +76,20 @@ function ProgresoPage() {
         cardio: l.category === "Cardio",
       }));
   }, [logs, exerciseId]);
+
+  const bodySeries = useMemo(
+    () =>
+      [...bodyWeights]
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((b) => ({
+          fecha: new Date(b.date).toLocaleDateString("es-MX", {
+            day: "2-digit",
+            month: "short",
+          }),
+          peso: b.weight,
+        })),
+    [bodyWeights],
+  );
 
   const isCardio = series[0]?.cardio ?? false;
   const dataKey = isCardio ? metric : "peso";
