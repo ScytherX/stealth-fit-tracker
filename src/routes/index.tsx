@@ -30,18 +30,17 @@ import {
 } from "@/lib/gym-store";
 import { WorkoutCalendar } from "@/components/WorkoutCalendar";
 import { RoutinesFab } from "@/components/RoutinesFab";
-import { BodyWeightButton } from "@/components/BodyWeightButton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Registrar entrenamiento" },
+      { title: "Ejercicios · Registrar entrenamiento" },
       {
         name: "description",
         content:
           "Registra series, repeticiones, peso y cardio con autocompletado de tu última sesión.",
       },
-      { property: "og:title", content: "Registrar entrenamiento" },
+      { property: "og:title", content: "Ejercicios · Registrar entrenamiento" },
       {
         property: "og:description",
         content: "Tu diario de gimnasio para registrar fuerza y cardio.",
@@ -168,11 +167,6 @@ function RegistroPage() {
 
   return (
     <main className="mx-auto w-full max-w-lg px-4 pt-8">
-      <header className="mb-6 flex items-start justify-end gap-3">
-        <BodyWeightButton date={date} />
-      </header>
-
-
       <section className="rounded-3xl border border-border bg-card p-5 shadow-lg">
         <div className="grid gap-4">
           <div className="grid gap-2">
