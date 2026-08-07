@@ -186,7 +186,7 @@ export function WorkoutCalendar({
             ))}
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   );
 }
