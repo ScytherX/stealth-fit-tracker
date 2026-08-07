@@ -175,7 +175,7 @@ function CuerpoPage() {
                     {[
                       b.bmi != null ? `IMC ${b.bmi}` : null,
                       b.bodyFat != null ? `${b.bodyFat}% grasa` : null,
-                      b.muscleMass != null ? `${b.muscleMass} kg músculo` : null,
+                      b.muscleMass != null ? `${b.muscleMass}% músculo` : null,
                     ]
                       .filter(Boolean)
                       .join(" · ") || "Sólo peso"}
