@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Menu, Dumbbell, LineChart, History, CalendarDays, HeartPulse, X } from "lucide-react";
 
