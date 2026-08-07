@@ -162,7 +162,7 @@ export function WorkoutCalendar({
                     setOpen(false);
                   }}
                   className={cn(
-                    "flex h-11 flex-col items-center justify-center gap-1 rounded-lg text-sm transition-colors",
+                    "flex h-14 flex-col items-center justify-center gap-1 rounded-lg text-base transition-colors",
                     "hover:bg-secondary disabled:opacity-30",
                     key === todayKey && "font-bold text-primary",
                     key === value && "bg-primary text-primary-foreground hover:bg-primary",
