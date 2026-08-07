@@ -62,13 +62,20 @@ function CuerpoPage() {
 
   const w = num(weight);
   const h = num(height);
+  const bf = num(bodyFat);
+  const mm = num(muscleMass);
   const bmi = w != null && h != null ? computeBMI(w, h) : undefined;
   const weightInvalid = weight.trim() !== "" && (w == null || w < 1);
-  const canSave = w != null && w >= 1;
+  const heightInvalid = height.trim() !== "" && (h == null || h < 1);
+  const bodyFatInvalid = bodyFat.trim() !== "" && (bf == null || bf < 1);
+  const muscleMassInvalid = muscleMass.trim() !== "" && (mm == null || mm < 1);
+  const canSave = w != null && w >= 1 && h != null && h >= 1 && bf != null && bf >= 1 && mm != null && mm >= 1;
 
   function handleSave() {
     if (!canSave) {
-      toast.error("Peso inválido", { description: "Escribe un número igual o mayor a 1." });
+      toast.error("Campos incompletos", {
+        description: "Todos los campos deben tener un número igual o mayor a 1.",
+      });
       return;
     }
     const now = new Date();
@@ -83,10 +90,10 @@ function CuerpoPage() {
     addBodyWeight({
       date: when.toISOString(),
       weight: w,
-      ...(h != null ? { height: h } : {}),
-      ...(bmi != null ? { bmi } : {}),
-      ...(num(bodyFat) != null ? { bodyFat: num(bodyFat) } : {}),
-      ...(num(muscleMass) != null ? { muscleMass: num(muscleMass) } : {}),
+      height: h,
+      bmi,
+      bodyFat: bf,
+      muscleMass: mm,
     });
     toast.success("Medición registrada", {
       description: `${w} kg · ${when.toLocaleDateString("es-MX")}`,
@@ -117,13 +124,26 @@ function CuerpoPage() {
               step="0.1"
               invalid={weightInvalid}
             />
-            <NumField label="Altura (cm)" value={height} onChange={setHeight} step="0.5" />
-            <NumField label="Grasa corporal (%)" value={bodyFat} onChange={setBodyFat} step="0.1" />
+            <NumField
+              label="Altura (cm)"
+              value={height}
+              onChange={setHeight}
+              step="0.5"
+              invalid={heightInvalid}
+            />
+            <NumField
+              label="Grasa corporal (%)"
+              value={bodyFat}
+              onChange={setBodyFat}
+              step="0.1"
+              invalid={bodyFatInvalid}
+            />
             <NumField
               label="Masa muscular (%)"
               value={muscleMass}
               onChange={setMuscleMass}
               step="0.1"
+              invalid={muscleMassInvalid}
             />
           </div>
 
