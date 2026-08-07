@@ -41,9 +41,11 @@ export function AppHeader() {
   }, [open]);
 
   useEffect(() => {
+    console.log("EFFECT RUNNING", openButtonRef.current);
     const btn = openButtonRef.current;
     if (!btn) return;
     function handleClick() {
+      console.log("NATIVE CLICK HANDLER");
       setOpen(true);
     }
     btn.addEventListener("click", handleClick);
