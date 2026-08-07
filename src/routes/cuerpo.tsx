@@ -62,9 +62,14 @@ function CuerpoPage() {
 
   const w = num(weight);
   const h = num(height);
+  const bf = num(bodyFat);
+  const mm = num(muscleMass);
   const bmi = w != null && h != null ? computeBMI(w, h) : undefined;
   const weightInvalid = weight.trim() !== "" && (w == null || w < 1);
-  const canSave = w != null && w >= 1;
+  const heightInvalid = height.trim() !== "" && (h == null || h < 1);
+  const bodyFatInvalid = bodyFat.trim() !== "" && (bf == null || bf < 1);
+  const muscleMassInvalid = muscleMass.trim() !== "" && (mm == null || mm < 1);
+  const canSave = w != null && w >= 1 && h != null && h >= 1 && bf != null && bf >= 1 && mm != null && mm >= 1;
 
   function handleSave() {
     if (!canSave) {
