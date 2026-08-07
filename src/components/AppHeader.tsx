@@ -15,6 +15,7 @@ const items = [
 
 export function AppHeader() {
   const [open, setOpen] = useState(false);
+  const openButtonRef = useRef<HTMLButtonElement>(null);
   const currentPath = useRouterState({
     select: (router) => router.location.pathname,
   });
@@ -39,17 +40,23 @@ export function AppHeader() {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [open]);
 
+  useEffect(() => {
+    const btn = openButtonRef.current;
+    if (!btn) return;
+    function handleClick() {
+      setOpen(true);
+    }
+    btn.addEventListener("click", handleClick);
+    return () => btn.removeEventListener("click", handleClick);
+  }, []);
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-lg items-center px-4" onClick={() => console.log("DIV CLICK")}>
+      <div className="mx-auto flex h-14 max-w-lg items-center px-4">
         <Button
+          ref={openButtonRef}
           variant="ghost"
           size="icon"
-          onClick={() => {
-            console.log("HAMBURGER CLICKED", Date.now());
-            setOpen(true);
-          }}
           className="-ml-2 h-10 w-10 rounded-full"
           aria-label="Abrir menú de navegación"
           aria-expanded={open}
@@ -70,7 +77,7 @@ export function AppHeader() {
         aria-modal="true"
         aria-label="Menú de navegación"
         className={cn(
-          "fixed inset-y-0 left-0 z-[60] flex w-3/4 max-w-xs flex-col border-r border-border bg-card shadow-2xl transition-transform duration-300 ease-out",
+          "fixed inset-y-0 left-0 z-[60] flex h-screen w-3/4 max-w-xs flex-col border-r border-border bg-card shadow-2xl transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -85,7 +92,7 @@ export function AppHeader() {
           </button>
         </div>
 
-        <nav className="flex-1 p-3">
+        <nav className="flex-1 overflow-y-auto p-3">
           <ul className="grid gap-1">
             {items.map(({ to, label, icon: Icon }) => {
               const active = currentPath === to;
