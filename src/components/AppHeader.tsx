@@ -18,8 +18,12 @@ export function AppHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/85 backdrop-blur-xl">
-      {/* Hidden checkbox must be a sibling before the drawer for peer-* to work */}
-      <input id="nav-toggle" type="checkbox" className="peer sr-only" />
+      <input id="nav-toggle" type="checkbox" className="sr-only" />
+
+      <style>{`
+        #nav-toggle:checked ~ #nav-drawer { transform: translateX(0); }
+        #nav-toggle:checked ~ #nav-overlay { pointer-events: auto; background-color: rgba(0,0,0,0.5); opacity: 1; }
+      `}</style>
 
       <div className="mx-auto flex h-14 max-w-lg items-center px-4">
         <label
@@ -36,15 +40,12 @@ export function AppHeader() {
         </span>
       </div>
 
-      {/* Drawer controlled by the checkbox state */}
       <div
         id="nav-drawer"
         role="dialog"
         aria-modal="true"
         aria-label="Menú de navegación"
-        className={cn(
-          "fixed inset-y-0 left-0 z-[60] flex h-screen w-3/4 max-w-xs -translate-x-full flex-col border-r border-border bg-card shadow-2xl transition-transform duration-300 ease-out peer-checked:translate-x-0",
-        )}
+        className="fixed inset-y-0 left-0 z-[60] flex h-screen w-3/4 max-w-xs -translate-x-full flex-col border-r border-border bg-card shadow-2xl transition-transform duration-300 ease-out"
       >
         <div className="flex items-center justify-between border-b border-border p-5">
           <span className="text-base font-semibold">Menú</span>
@@ -91,10 +92,10 @@ export function AppHeader() {
         </div>
       </div>
 
-      {/* Overlay visible only when the drawer is open */}
       <label
+        id="nav-overlay"
         htmlFor="nav-toggle"
-        className="pointer-events-none fixed inset-0 z-[55] bg-black/0 opacity-0 backdrop-blur-sm transition-opacity peer-checked:pointer-events-auto peer-checked:bg-black/50 peer-checked:opacity-100"
+        className="pointer-events-none fixed inset-0 z-[55] bg-black/0 opacity-0 backdrop-blur-sm transition-opacity"
         aria-hidden="true"
       />
     </header>
