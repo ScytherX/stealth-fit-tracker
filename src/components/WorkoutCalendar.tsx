@@ -2,7 +2,13 @@ import { useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { CATEGORIES, useLogs, type Category } from "@/lib/gym-store";
 
@@ -85,7 +91,7 @@ export function WorkoutCalendar({
   const label = `${WEEKDAYS_SHORT[new Date(Date.UTC(y ?? 2026, (m ?? 1) - 1, d ?? 1)).getUTCDay()]}, ${String(d ?? 1).padStart(2, "0")} de ${MONTHS[(m ?? 1) - 1]} de ${y ?? 2026}`;
 
   return (
-    <Popover
+    <Dialog
       open={open}
       onOpenChange={(o) => {
         setOpen(o);
@@ -95,7 +101,7 @@ export function WorkoutCalendar({
         }
       }}
     >
-      <PopoverTrigger asChild>
+      <DialogTrigger asChild>
         <Button
           variant="outline"
           className={cn(
@@ -106,8 +112,11 @@ export function WorkoutCalendar({
           <CalendarDays className="size-4 text-primary" />
           {label}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-[320px] rounded-2xl p-3">
+      </DialogTrigger>
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md rounded-2xl p-4 sm:p-6">
+        <DialogHeader className="space-y-0">
+          <DialogTitle className="text-base">Selecciona una fecha</DialogTitle>
+        </DialogHeader>
         <div className="pointer-events-auto">
           <div className="flex items-center justify-between">
             <Button
@@ -153,7 +162,7 @@ export function WorkoutCalendar({
                     setOpen(false);
                   }}
                   className={cn(
-                    "flex h-11 flex-col items-center justify-center gap-1 rounded-lg text-sm transition-colors",
+                    "flex h-14 flex-col items-center justify-center gap-1 rounded-lg text-base transition-colors",
                     "hover:bg-secondary disabled:opacity-30",
                     key === todayKey && "font-bold text-primary",
                     key === value && "bg-primary text-primary-foreground hover:bg-primary",
@@ -183,7 +192,7 @@ export function WorkoutCalendar({
             ))}
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   );
 }
