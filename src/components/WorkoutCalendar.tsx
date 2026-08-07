@@ -85,7 +85,7 @@ export function WorkoutCalendar({
   const label = `${WEEKDAYS_SHORT[new Date(Date.UTC(y ?? 2026, (m ?? 1) - 1, d ?? 1)).getUTCDay()]}, ${String(d ?? 1).padStart(2, "0")} de ${MONTHS[(m ?? 1) - 1]} de ${y ?? 2026}`;
 
   return (
-    <Popover
+    <Dialog
       open={open}
       onOpenChange={(o) => {
         setOpen(o);
@@ -95,7 +95,7 @@ export function WorkoutCalendar({
         }
       }}
     >
-      <PopoverTrigger asChild>
+      <DialogTrigger asChild>
         <Button
           variant="outline"
           className={cn(
@@ -106,8 +106,11 @@ export function WorkoutCalendar({
           <CalendarDays className="size-4 text-primary" />
           {label}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-[320px] rounded-2xl p-3">
+      </DialogTrigger>
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md rounded-2xl p-4 sm:p-6">
+        <DialogHeader className="space-y-0">
+          <DialogTitle className="text-base">Selecciona una fecha</DialogTitle>
+        </DialogHeader>
         <div className="pointer-events-auto">
           <div className="flex items-center justify-between">
             <Button
