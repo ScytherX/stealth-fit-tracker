@@ -17,23 +17,28 @@ export function AppHeader() {
   });
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/85 backdrop-blur-xl">
-      <input id="nav-toggle" type="checkbox" className="sr-only" />
+    <>
+      <style>{`
+        #nav-drawer:target { translate: 0; }
+        #nav-drawer:target ~ #nav-overlay { pointer-events: auto; background-color: rgba(0,0,0,0.5); opacity: 1; }
+      `}</style>
 
-      <div className="mx-auto flex h-14 max-w-lg items-center px-4">
-        <label
-          htmlFor="nav-toggle"
-          className="-ml-2 inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent"
-          aria-label="Abrir menú de navegación"
-          aria-controls="nav-drawer"
-        >
-          <MenuIcon className="size-6" />
-        </label>
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/85 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-lg items-center px-4">
+          <a
+            href="#nav-drawer"
+            className="-ml-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent"
+            aria-label="Abrir menú de navegación"
+            aria-controls="nav-drawer"
+          >
+            <MenuIcon className="size-6" />
+          </a>
 
-        <span className="ml-2 text-sm font-semibold tracking-tight">
-          {items.find((i) => i.to === currentPath)?.label ?? "Entrenamientos"}
-        </span>
-      </div>
+          <span className="ml-2 text-sm font-semibold tracking-tight">
+            {items.find((i) => i.to === currentPath)?.label ?? "Entrenamientos"}
+          </span>
+        </div>
+      </header>
 
       <div
         id="nav-drawer"
@@ -44,13 +49,13 @@ export function AppHeader() {
       >
         <div className="flex items-center justify-between border-b border-border p-5">
           <span className="text-base font-semibold">Menú</span>
-          <label
-            htmlFor="nav-toggle"
-            className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          <a
+            href="#"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             aria-label="Cerrar menú"
           >
             <CloseIcon className="size-4" />
-          </label>
+          </a>
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3">
@@ -62,8 +67,10 @@ export function AppHeader() {
                   <Link
                     to={to}
                     onClick={() => {
-                      const toggle = document.getElementById("nav-toggle") as HTMLInputElement | null;
-                      if (toggle) toggle.checked = false;
+                      // Remove the hash so the :target drawer closes
+                      if (window.location.hash === "#nav-drawer") {
+                        window.history.replaceState(null, "", window.location.pathname);
+                      }
                     }}
                     activeOptions={{ exact: to === "/" }}
                     className={cn(
@@ -87,18 +94,13 @@ export function AppHeader() {
         </div>
       </div>
 
-      <label
+      <a
         id="nav-overlay"
-        htmlFor="nav-toggle"
+        href="#"
         className="pointer-events-none fixed inset-0 z-[55] bg-black/0 opacity-0 backdrop-blur-sm transition-opacity"
         aria-hidden="true"
       />
-
-      <style>{`
-        #nav-toggle:checked ~ #nav-drawer { translate: 0; }
-        #nav-toggle:checked ~ #nav-overlay { pointer-events: auto; background-color: rgba(0,0,0,0.5); opacity: 1; }
-      `}</style>
-    </header>
+    </>
   );
 }
 
