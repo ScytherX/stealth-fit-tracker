@@ -54,6 +54,7 @@ export const DEFAULT_EXERCISES: Exercise[] = [
 const EX_KEY = "gymlog.customExercises.v1";
 const LOG_KEY = "gymlog.logs.v1";
 const ROUTINE_KEY = "gymlog.routines.v1";
+const BODYWEIGHT_KEY = "gymlog.bodyweights.v1";
 
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
