@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { logVolume, useLogs } from "@/lib/gym-store";
+import { logVolume, useBodyWeights, useLogs } from "@/lib/gym-store";
 import { ProgressStats } from "@/components/ProgressStats";
 
 export const Route = createFileRoute("/progreso")({
@@ -45,6 +45,7 @@ type CardioMetric = "minutes" | "speed";
 
 function ProgresoPage() {
   const { logs } = useLogs();
+  const { bodyWeights } = useBodyWeights();
   const [exerciseId, setExerciseId] = useState("");
   const [metric, setMetric] = useState<CardioMetric>("minutes");
 
@@ -75,6 +76,20 @@ function ProgresoPage() {
         cardio: l.category === "Cardio",
       }));
   }, [logs, exerciseId]);
+
+  const bodySeries = useMemo(
+    () =>
+      [...bodyWeights]
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((b) => ({
+          fecha: new Date(b.date).toLocaleDateString("es-MX", {
+            day: "2-digit",
+            month: "short",
+          }),
+          peso: b.weight,
+        })),
+    [bodyWeights],
+  );
 
   const isCardio = series[0]?.cardio ?? false;
   const dataKey = isCardio ? metric : "peso";
@@ -180,6 +195,56 @@ function ProgresoPage() {
                     dot={false}
                   />
                 )}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </section>
+
+      <section className="mt-6 rounded-3xl border border-border bg-card p-4">
+        <h2 className="text-lg font-bold">Peso corporal</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Fluctuación de tu peso corporal a lo largo del tiempo.
+        </p>
+        {bodySeries.length === 0 ? (
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            Registra tu peso corporal para ver la gráfica.
+          </p>
+        ) : (
+          <div className="mt-4 h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={bodySeries} margin={{ top: 12, right: 8, left: -16, bottom: 0 }}>
+                <CartesianGrid stroke="var(--border)" vertical={false} />
+                <XAxis
+                  dataKey="fecha"
+                  stroke="var(--muted-foreground)"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="var(--muted-foreground)"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={["dataMin - 2", "dataMax + 2"]}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--popover)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    color: "var(--popover-foreground)",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="peso"
+                  name="Peso corporal (kg)"
+                  stroke="var(--primary)"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: "var(--primary)" }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
