@@ -40,6 +40,10 @@ export function AppHeader() {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [open]);
 
+  useEffect(() => {
+    console.log("EFFECT EVERY RENDER");
+  });
+
   useLayoutEffect(() => {
     console.log("LAYOUT EFFECT RUNNING");
   }, []);
