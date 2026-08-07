@@ -120,7 +120,7 @@ function CuerpoPage() {
             <NumField label="Altura (cm)" value={height} onChange={setHeight} step="0.5" />
             <NumField label="Grasa corporal (%)" value={bodyFat} onChange={setBodyFat} step="0.1" />
             <NumField
-              label="Masa muscular (kg)"
+              label="Masa muscular (%)"
               value={muscleMass}
               onChange={setMuscleMass}
               step="0.1"
@@ -175,7 +175,7 @@ function CuerpoPage() {
                     {[
                       b.bmi != null ? `IMC ${b.bmi}` : null,
                       b.bodyFat != null ? `${b.bodyFat}% grasa` : null,
-                      b.muscleMass != null ? `${b.muscleMass} kg músculo` : null,
+                      b.muscleMass != null ? `${b.muscleMass}% músculo` : null,
                     ]
                       .filter(Boolean)
                       .join(" · ") || "Sólo peso"}
