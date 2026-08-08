@@ -1,6 +1,7 @@
 import type { Category } from "@/lib/gym-store";
+import type { FC } from "react";
 
-const ICONS: Record<Category, (props: { className?: string }) => JSX.Element> = {
+const ICONS: Record<Category, FC<{ className?: string }>> = {
   Pecho: ({ className }) => (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <path
