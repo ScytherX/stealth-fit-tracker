@@ -306,8 +306,6 @@ function RegistroPage() {
         </div>
       </section>
 
-      <WeeklySummary logs={logs} />
-
       {recent.length > 0 && (
         <section className="mt-8">
           <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
