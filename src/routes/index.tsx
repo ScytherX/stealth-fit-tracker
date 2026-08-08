@@ -30,6 +30,7 @@ import {
 } from "@/lib/gym-store";
 import { WorkoutCalendar } from "@/components/WorkoutCalendar";
 import { RoutinesFab } from "@/components/RoutinesFab";
+import { CategorySelector } from "@/components/CategorySelector";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -180,18 +181,7 @@ function RegistroPage() {
 
           <div className="grid gap-2">
             <Label>Grupo muscular / Categoría</Label>
-            <Select value={category} onValueChange={(v) => setCategory(v as Category)}>
-              <SelectTrigger className="h-12 rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CategorySelector value={category} onChange={setCategory} />
           </div>
 
           <div className="grid gap-2">
