@@ -39,7 +39,7 @@ export function AppHeader() {
         aria-label="Menú de navegación"
         className="fixed inset-y-0 left-0 z-[60] flex h-screen w-3/4 max-w-xs -translate-x-full flex-col border-r border-border bg-card shadow-2xl transition-transform duration-300 ease-out"
       >
-        <div className="flex items-center justify-end border-b border-border p-5">
+        <div className="flex items-center justify-end p-5">
           <a
             href="#"
             className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
