@@ -87,8 +87,13 @@ export function WorkoutCalendar({
   }, [month]);
 
   const todayKey = toKey(new Date());
-  const [y, m, d] = value.split("-").map(Number);
-  const label = `${WEEKDAYS_SHORT[new Date(Date.UTC(y ?? 2026, (m ?? 1) - 1, d ?? 1)).getUTCDay()]}, ${String(d ?? 1).padStart(2, "0")} de ${MONTHS[(m ?? 1) - 1]} de ${y ?? 2026}`;
+  const hasValue = value.length > 0;
+  const label = hasValue
+    ? (() => {
+        const [y, m, d] = value.split("-").map(Number);
+        return `${WEEKDAYS_SHORT[new Date(y ?? 2026, (m ?? 1) - 1, d ?? 1).getDay()]}, ${String(d ?? 1).padStart(2, "0")} de ${MONTHS[(m ?? 1) - 1]} de ${y ?? 2026}`;
+      })()
+    : "Seleccionar fecha";
 
   return (
     <Dialog

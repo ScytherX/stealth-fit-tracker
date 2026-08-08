@@ -38,6 +38,11 @@ function HistorialPage() {
   const { logs, removeLog } = useLogs();
   const [filter, setFilter] = useState<Category | "Todas">("Todas");
   const [day, setDay] = useState("");
+  const [defaultDay, setDefaultDay] = useState("");
+
+  useEffect(() => {
+    setDefaultDay(new Date().toLocaleDateString("sv-SE"));
+  }, []);
 
   const filtered = useMemo(
     () =>
@@ -89,7 +94,7 @@ function HistorialPage() {
         <Label>Ver un día específico</Label>
         <div className="flex gap-2">
           <WorkoutCalendar
-            value={day || new Date().toLocaleDateString("sv-SE")}
+            value={day || defaultDay}
             onChange={setDay}
             className={day ? "" : "text-muted-foreground"}
           />
