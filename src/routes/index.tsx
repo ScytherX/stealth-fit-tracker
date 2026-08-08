@@ -91,25 +91,21 @@ function RegistroPage() {
   const isCardio = category === "Cardio";
   const last = exerciseId ? lastFor(exerciseId) : undefined;
 
+  const clearFields = () => {
+    setWeight("");
+    setSets("");
+    setReps("");
+    setMinutes("");
+    setSpeed("");
+    setIncline("");
+    setRest("");
+  };
+
+  // Los campos siempre inician vacíos; no se prellenan con el último registro.
   useEffect(() => {
-    if (!last) {
-      setWeight("");
-      setSets("");
-      setReps("");
-      setMinutes("");
-      setSpeed("");
-      setIncline("");
-      setRest("");
-      return;
-    }
-    setWeight(last.weight != null ? String(last.weight) : "");
-    setSets(last.sets != null ? String(last.sets) : "");
-    setReps(last.reps != null ? String(last.reps) : "");
-    setMinutes(last.minutes != null ? String(last.minutes) : "");
-    setSpeed(last.speed != null ? String(last.speed) : "");
-    setIncline(last.incline != null ? String(last.incline) : "");
-    setRest(last.rest != null ? String(last.rest) : "");
-  }, [last?.id, exerciseId]);
+    clearFields();
+  }, [exerciseId, category]);
+
 
   const num = (v: string) => {
     const n = v.trim() === "" ? undefined : Number(v);
