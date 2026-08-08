@@ -30,7 +30,6 @@ import {
 } from "@/lib/gym-store";
 import { WorkoutCalendar } from "@/components/WorkoutCalendar";
 import { RoutinesFab } from "@/components/RoutinesFab";
-import { WeeklySummary } from "@/components/WeeklySummary";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -306,8 +305,6 @@ function RegistroPage() {
           </Button>
         </div>
       </section>
-
-      <WeeklySummary logs={logs} />
 
       {recent.length > 0 && (
         <section className="mt-8">
