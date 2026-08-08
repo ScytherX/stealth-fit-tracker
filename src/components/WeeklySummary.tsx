@@ -107,17 +107,21 @@ function MiniStat({
   value,
   comparison,
   unit,
+  pluralUnit,
 }: {
   label: string;
   value: string;
   comparison: number;
   unit: string;
+  pluralUnit?: string;
 }) {
   const isPositive = comparison > 0;
   const isNeutral = comparison === 0;
   const Icon = isNeutral ? Minus : isPositive ? TrendingUp : TrendingDown;
   const tone = isNeutral ? "text-muted-foreground" : isPositive ? "text-primary" : "text-destructive";
-  const text = isNeutral ? "Igual" : `${isPositive ? "+" : ""}${Math.round(comparison).toLocaleString("es-MX")} ${unit}`;
+  const abs = Math.round(comparison);
+  const displayUnit = abs === 1 || isNeutral ? unit : (pluralUnit ?? unit);
+  const text = isNeutral ? "Igual" : `${isPositive ? "+" : ""}${abs.toLocaleString("es-MX")} ${displayUnit}`;
 
   return (
     <div className="rounded-2xl border border-border bg-background px-4 py-3">
