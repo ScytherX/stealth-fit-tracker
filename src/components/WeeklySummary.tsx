@@ -78,6 +78,7 @@ export function WeeklySummary({ logs }: { logs: LogEntry[] }) {
           value={`${stats.thisDays}`}
           comparison={dayDiff}
           unit="día"
+          pluralUnit="días"
         />
         <MiniStat
           label="Volumen"
