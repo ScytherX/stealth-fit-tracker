@@ -30,6 +30,7 @@ import {
 } from "@/lib/gym-store";
 import { WorkoutCalendar } from "@/components/WorkoutCalendar";
 import { RoutinesFab } from "@/components/RoutinesFab";
+import { CategorySelector } from "@/components/CategorySelector";
 
 export const Route = createFileRoute("/")({
   head: () => ({
