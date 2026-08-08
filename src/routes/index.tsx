@@ -144,6 +144,7 @@ function RegistroPage() {
         ? { minutes: num(minutes), speed: num(speed), incline: num(incline) }
         : { weight: num(weight), sets: num(sets), reps: num(reps) }),
     });
+    clearFields();
     toast.success("Registro guardado", {
       description: `${exercise.name} · ${when.toLocaleDateString("es-MX")}`,
     });
