@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { ListChecks, Plus, Pencil, Trash2, Play, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ListChecks, Plus, Pencil, Trash2, Play, X, Share2, QrCode } from "lucide-react";
+import QRCode from "react-qr-code";
+import { Html5QrcodeScanner } from "html5-qrcode";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -24,6 +27,7 @@ import {
   describeRoutineItem,
   uid,
   useExercises,
+  useLocalizedName, useTranslation,
   useLogs,
   useRoutines,
   type Category,
@@ -34,16 +38,62 @@ import {
 const num = (v: string) => (v.trim() === "" ? undefined : Number(v));
 
 export function RoutinesFab({ date }: { date: string }) {
+  const getLocalizedName = useLocalizedName();
+  const t = useTranslation();
   const { exercises } = useExercises();
   const { routines, saveRoutine, removeRoutine } = useRoutines();
   const { addLogs } = useLogs();
 
   const [listOpen, setListOpen] = useState(false);
+
+  const [shareRoutine, setShareRoutine] = useState<Routine | null>(null);
+  const [scanOpen, setScanOpen] = useState(false);
+  
+  useEffect(() => {
+    if (!scanOpen) return;
+    const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+    scanner.render(
+      (text: string) => {
+        try {
+          const r = JSON.parse(text);
+          let importedRoutine = null;
+          if (r && r.name && r.items) { // Old format
+            importedRoutine = { ...r, id: uid() };
+          } else if (r && r.n && r.i) { // New compressed format
+            importedRoutine = {
+              id: uid(),
+              name: r.n,
+              items: r.i.map((x: any) => ({
+                id: uid(),
+                exerciseId: x.e,
+                category: x.c,
+                ...x
+              }))
+            };
+          }
+          
+          if (importedRoutine) {
+            saveRoutine(importedRoutine);
+            toast.success(t("routine_imported"), { description: importedRoutine.name });
+            setScanOpen(false);
+            scanner?.clear?.();
+          } else {
+            throw new Error("Formato inválido");
+          }
+        } catch(e) {
+          toast.error(t("invalid_qr"));
+        }
+      },
+      (error: any) => {}
+    );
+    return () => { scanner.clear().catch(()=>{}); };
+  }, [scanOpen, saveRoutine]);
+
   const [draft, setDraft] = useState<Routine | null>(null);
 
   function logRoutine(routine: Routine) {
     if (routine.items.length === 0) {
-      toast.error("Esta rutina no tiene ejercicios");
+      toast.error(t("routine_no_exercises"));
       return;
     }
     const now = new Date();
@@ -59,7 +109,7 @@ export function RoutinesFab({ date }: { date: string }) {
       routine.items.map((i) => ({
         date: when.toISOString(),
         exerciseId: i.exerciseId,
-        exerciseName: i.exerciseName,
+        exerciseName: getLocalizedName((exercises.find(e => e.id === i.exerciseId) || i) as any),
         category: i.category,
         ...(i.rest == null ? {} : { rest: i.rest }),
         ...(i.category === "Cardio"
@@ -68,7 +118,7 @@ export function RoutinesFab({ date }: { date: string }) {
       })),
     );
     setListOpen(false);
-    toast.success("Rutina registrada", {
+    toast.success(t("routine_logged"), {
       description: `${routine.name} · ${routine.items.length} ejercicios`,
     });
   }
@@ -87,7 +137,7 @@ export function RoutinesFab({ date }: { date: string }) {
       <Dialog open={listOpen} onOpenChange={setListOpen}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Mis rutinas</DialogTitle>
+            <DialogTitle>{t("my_routines")}</DialogTitle>
           </DialogHeader>
 
           {routines.length === 0 ? (
@@ -112,6 +162,17 @@ export function RoutinesFab({ date }: { date: string }) {
                       <Button
                         size="icon"
                         variant="ghost"
+                        aria-label="Compartir rutina"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShareRoutine(r);
+                        }}
+                      >
+                        <Share2 className="size-4 text-muted-foreground" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
                         aria-label="Eliminar rutina"
                         onClick={() => removeRoutine(r.id)}
                       >
@@ -128,12 +189,115 @@ export function RoutinesFab({ date }: { date: string }) {
           )}
 
           <DialogFooter>
-            <Button
-              className="w-full gap-2"
-              onClick={() => setDraft({ id: uid(), name: "", items: [] })}
-            >
-              <Plus className="size-4" /> Nueva rutina
-            </Button>
+            
+            {/* Share Routine Dialog */}
+            <Dialog open={!!shareRoutine} onOpenChange={(o) => !o && setShareRoutine(null)}>
+              <DialogContent className="max-w-sm text-center">
+                <DialogHeader>
+                  <DialogTitle>{t("share_routine")}</DialogTitle>
+                  <DialogDescription>
+                    Pide a tu amigo que escanee o pegue este código.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mx-auto mt-4 w-full rounded-xl flex flex-col items-center">
+                  {shareRoutine && (
+                    <>
+                      <div className="bg-white p-4 rounded-xl">
+                        <QRCode 
+                          value={JSON.stringify({
+                            n: shareRoutine.name, 
+                            i: shareRoutine.items.map(x => {
+                              const { id, exerciseId, category, ...rest } = x;
+                              return { e: exerciseId, c: category, ...rest };
+                            })
+                          })} 
+                          size={200} 
+                        />
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        className="w-full mt-4" 
+                        onClick={() => {
+                          const payload = JSON.stringify({
+                            n: shareRoutine.name, 
+                            i: shareRoutine.items.map(x => {
+                              const { id, exerciseId, category, ...rest } = x;
+                              return { e: exerciseId, c: category, ...rest };
+                            })
+                          });
+                          navigator.clipboard.writeText(payload);
+                          toast.success(t("code_copied"));
+                        }}
+                      >
+                        Copiar código de texto
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Scan QR Dialog */}
+            <Dialog open={scanOpen} onOpenChange={setScanOpen}>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>{t("scan_routine")}</DialogTitle>
+                </DialogHeader>
+                <div id="reader" className="mt-4 w-full overflow-hidden rounded-xl bg-muted/50"></div>
+                <div className="mt-2 grid gap-2">
+                  <p className="text-xs text-center text-muted-foreground mt-2">{t("paste_here")}</p>
+                  <Input 
+                    placeholder={t("paste_placeholder")} 
+                    onChange={(e) => {
+                      const text = e.target.value.trim();
+                      if (!text) return;
+                      try {
+                        const r = JSON.parse(text);
+                        let importedRoutine = null;
+                        if (r && r.name && r.items) {
+                          importedRoutine = { ...r, id: uid() };
+                        } else if (r && r.n && r.i) {
+                          importedRoutine = {
+                            id: uid(),
+                            name: r.n,
+                            items: r.i.map((x: any) => ({
+                              id: uid(),
+                              exerciseId: x.e,
+                              category: x.c,
+                              ...x
+                            }))
+                          };
+                        }
+                        if (importedRoutine) {
+                          saveRoutine(importedRoutine);
+                          toast.success(t("routine_imported"), { description: importedRoutine.name });
+                          setScanOpen(false);
+                        }
+                      } catch(err) {
+                        // ignore parse errors
+                      }
+                    }}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <div className="flex gap-2 w-full">
+              <Button
+                onClick={() => setScanOpen(true)}
+                variant="outline"
+                className="flex-1"
+              >
+                <QrCode className="size-4 mr-2" /> Escanear QR
+              </Button>
+              <Button
+                onClick={() => setDraft({ id: uid(), name: "", items: [] })}
+                className="flex-1"
+              >
+                <Plus className="size-4 mr-2" /> Nueva rutina
+              </Button>
+            </div>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -165,6 +329,8 @@ function RoutineEditor({
   onClose: () => void;
   onSave: (r: Routine) => void;
 }) {
+  const t = useTranslation();
+  const getLocalizedName = useLocalizedName();
   const [name, setName] = useState(routine.name);
   const [items, setItems] = useState<RoutineItem[]>(routine.items);
 
@@ -174,6 +340,12 @@ function RoutineEditor({
   const current = exercises.find((e) => e.id === exerciseId);
   const isCardio = category === "Cardio";
 
+  const [exerciseSelectorOpen, setExerciseSelectorOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const visibleExercises = searchQuery.trim()
+    ? filtered.filter((e) => e.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+    : filtered;
+
   const [weight, setWeight] = useState("");
   const [sets, setSets] = useState("");
   const [reps, setReps] = useState("");
@@ -181,6 +353,7 @@ function RoutineEditor({
   const [speed, setSpeed] = useState("");
   const [incline, setIncline] = useState("");
   const [rest, setRest] = useState("");
+  const [rir, setRir] = useState("");
 
   const invalid = (v: string, { required = true, min = 1 } = {}) => {
     if (v.trim() === "") return required;
@@ -191,7 +364,8 @@ function RoutineEditor({
   const fieldsInvalid = isCardio
     ? invalid(minutes) || invalid(speed) || invalid(incline, { required: false, min: 0 })
     : invalid(weight) || invalid(sets) || invalid(reps);
-  const canAdd = !!current && !fieldsInvalid && !invalid(rest, { required: false });
+  const rirInvalid = rir.trim() !== "" && (!Number.isInteger(Number(rir)) || Number(rir) < 0);
+  const canAdd = !!current && !fieldsInvalid && !invalid(rest, { required: false }) && !rirInvalid;
 
   function changeCategory(c: Category) {
     setCategory(c);
@@ -220,22 +394,23 @@ function RoutineEditor({
     setSpeed("");
     setIncline("");
     setRest("");
+    setRir("");
   }
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{routine.name ? "Editar rutina" : "Nueva rutina"}</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label>Nombre de la rutina</Label>
+            <Label>{t("routine_name")}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ej. Día de empuje"
+              placeholder={t("routine_name_placeholder")}
             />
           </div>
 
@@ -247,7 +422,7 @@ function RoutineEditor({
                   className="flex items-center justify-between gap-2 rounded-xl border border-border px-3 py-2"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{i.exerciseName}</p>
+                    <p className="truncate text-sm font-semibold">{getLocalizedName((exercises.find(e => e.id === i.exerciseId) || i) as any)}</p>
                     <p className="truncate text-xs text-muted-foreground">
                       {describeRoutineItem(i)}
                     </p>
@@ -255,7 +430,7 @@ function RoutineEditor({
                   <Button
                     size="icon"
                     variant="ghost"
-                    aria-label="Quitar ejercicio"
+                    aria-label={t("remove_exercise")}
                     onClick={() => setItems(items.filter((x) => x.id !== i.id))}
                   >
                     <X className="size-4" />
@@ -268,38 +443,67 @@ function RoutineEditor({
           <div className="grid gap-3 rounded-2xl border border-dashed border-border p-3">
             <div className="grid grid-cols-2 gap-2">
               <div className="grid gap-1">
-                <Label className="text-xs text-muted-foreground">Categoría</Label>
+                <Label className="text-xs text-muted-foreground">{t("category")}</Label>
                 <Select value={category} onValueChange={(v) => changeCategory(v as Category)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
+                      <SelectItem key={c} value={c}>{t(("cat_" + c) as any)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-1">
-                <Label className="text-xs text-muted-foreground">Ejercicio</Label>
-                <Select value={exerciseId} onValueChange={setExerciseId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filtered.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {e.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className="text-xs text-muted-foreground">{t("exercise")}</Label>
+                <Button 
+                  variant="outline" 
+                  className="h-10 w-full justify-start rounded-md font-normal text-sm px-3"
+                  onClick={() => setExerciseSelectorOpen(true)}
+                >
+                  {current?.name || "Selecciona"}
+                </Button>
+                <Dialog open={exerciseSelectorOpen} onOpenChange={(open) => {
+                  setExerciseSelectorOpen(open);
+                  if (!open) setSearchQuery("");
+                }}>
+                  <DialogContent className="max-w-md w-[calc(100vw-1.5rem)] rounded-2xl p-4 sm:p-6 flex flex-col max-h-[85vh]">
+                    <DialogHeader className="space-y-3 flex-shrink-0">
+                      <DialogTitle>{t("select_exercise")}</DialogTitle>
+                      <Input 
+                        placeholder={t("search_exercise")} 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="rounded-xl"
+                      />
+                    </DialogHeader>
+                    <div className="flex-1 overflow-y-auto min-h-[300px] mt-2 flex flex-col gap-1 pr-2">
+                      {visibleExercises.length > 0 ? (
+                        visibleExercises.map((e) => (
+                          <button
+                            key={e.id}
+                            type="button"
+                            className={`text-left px-4 py-3 rounded-xl transition-colors ${e.id === exerciseId ? 'bg-primary text-primary-foreground font-semibold' : 'hover:bg-secondary'}`}
+                            onClick={() => {
+                              setExerciseId(e.id);
+                              setExerciseSelectorOpen(false);
+                              setSearchQuery("");
+                            }}
+                          >
+                            {getLocalizedName(e)}
+                          </button>
+                        ))
+                      ) : (
+                        <p className="text-center text-sm text-muted-foreground mt-8">{t("no_exercises_found")}</p>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className={isCardio ? "grid grid-cols-3 gap-2" : "grid grid-cols-2 gap-2"}>
               {isCardio ? (
                 <>
                   <MiniField label="Min" value={minutes} onChange={setMinutes} />
@@ -311,6 +515,7 @@ function RoutineEditor({
                   <MiniField label="Kg" value={weight} onChange={setWeight} step="0.5" />
                   <MiniField label="Series" value={sets} onChange={setSets} />
                   <MiniField label="Reps" value={reps} onChange={setReps} />
+                  <MiniField label="RIR (0+)" value={rir} onChange={setRir} />
                 </>
               )}
             </div>
@@ -332,8 +537,8 @@ function RoutineEditor({
             {items.length === 0 || !name.trim() ? (
               <p className="text-xs text-muted-foreground">
                 {items.length === 0
-                  ? "Agrega al menos un ejercicio para guardar la rutina."
-                  : "Escribe un nombre para la rutina."}
+                  ? t("add_at_least_one")
+                  : t("give_name")}
               </p>
             ) : null}
             <Button

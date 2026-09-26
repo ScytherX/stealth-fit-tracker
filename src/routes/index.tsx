@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Save, Flame } from "lucide-react";
+import { Plus, Save, Flame, MessageSquare, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +22,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   CATEGORIES,
   describeLog,
   useExercises,
+  useLocalizedName, useTranslation,
   useLogs,
   type Category,
 } from "@/lib/gym-store";
@@ -56,7 +68,10 @@ function RegistroPage() {
   const { logs, addLog, lastFor } = useLogs();
 
   const [category, setCategory] = useState<Category>("Pecho");
+  const getLocalizedName = useLocalizedName();
+  const t = useTranslation();
   const [exerciseId, setExerciseId] = useState<string>("");
+  const [comboboxOpen, setComboboxOpen] = useState(false);
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [todayKey, setTodayKey] = useState(() => new Date().toISOString().slice(0, 10));
 
@@ -138,7 +153,7 @@ function RegistroPage() {
     addLog({
       date: when.toISOString(),
       exerciseId: exercise.id,
-      exerciseName: exercise.name,
+      exerciseName: getLocalizedName(exercise as any),
       category: exercise.category,
       ...(rest.trim() === "" ? {} : { rest: num(rest) }),
       ...(exercise.category === "Cardio"
@@ -158,7 +173,7 @@ function RegistroPage() {
     setExerciseId(ex.id);
     setNewName("");
     setDialogOpen(false);
-    toast.success("Ejercicio creado", { description: ex.name });
+    toast.success("Ejercicio creado", { description: getLocalizedName(ex as any) });
   }
 
   const recent = logs.slice(0, 4);
@@ -168,7 +183,7 @@ function RegistroPage() {
       <section className="rounded-3xl border border-border bg-card p-5 shadow-lg">
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label>Fecha del entrenamiento</Label>
+            <Label>{t("workout_date")}</Label>
             <WorkoutCalendar
               value={date}
               onChange={setDate}
@@ -180,26 +195,25 @@ function RegistroPage() {
           </div>
 
           <div className="grid gap-2">
-            <Label>Grupo muscular / Categoría</Label>
+            <Label>{t("muscle_category")}</Label>
             <CategorySelector value={category} onChange={setCategory} />
           </div>
 
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
-              <Label>Ejercicio</Label>
+              <Label>{t("exercise")}</Label>
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-7 gap-1 text-primary">
-                    <Plus className="size-4" /> Nuevo
-                  </Button>
+                    <Plus className="size-4" /> {t("new")}</Button>
                 </DialogTrigger>
                 <DialogContent className="rounded-2xl">
                   <DialogHeader>
-                    <DialogTitle>Nuevo ejercicio</DialogTitle>
+                    <DialogTitle>{t("new_exercise")}</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-4">
                     <div className="grid gap-2">
-                      <Label>Nombre</Label>
+                      <Label>{t("name")}</Label>
                       <Input
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
@@ -207,7 +221,7 @@ function RegistroPage() {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label>Categoría</Label>
+                      <Label>{t("category")}</Label>
                       <Select
                         value={newCategory}
                         onValueChange={(v) => setNewCategory(v as Category)}
@@ -215,7 +229,7 @@ function RegistroPage() {
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent position="popper" align="center">
                           {CATEGORIES.map((c) => (
                             <SelectItem key={c} value={c}>
                               {c}
@@ -226,30 +240,59 @@ function RegistroPage() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button onClick={handleCreateExercise}>Guardar ejercicio</Button>
+                    <Button onClick={handleCreateExercise}>{t("save")}</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
             </div>
-            <Select value={exerciseId} onValueChange={setExerciseId}>
-              <SelectTrigger className="h-12 rounded-xl">
-                <SelectValue placeholder="Selecciona un ejercicio" />
-              </SelectTrigger>
-              <SelectContent>
-                {filtered.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <>
+              <Button
+                variant="outline"
+                role="combobox"
+                onClick={() => setComboboxOpen(true)}
+                className="h-12 rounded-xl w-full justify-between font-normal overflow-hidden max-w-full"
+              >
+                <span className="truncate flex-1 text-left min-w-0">
+                  {exerciseId
+                    ? getLocalizedName((exercises.find((e) => e.id === exerciseId) || filtered[0]) as any)
+                    : t("select_exercise")}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+              <CommandDialog open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                <CommandInput placeholder={t("search_exercise")} />
+                <CommandList>
+                  <CommandEmpty>{t("no_exercises_found")}</CommandEmpty>
+                  <CommandGroup>
+                    {filtered.map((e) => (
+                      <CommandItem
+                        key={e.id}
+                        value={getLocalizedName(e as any)}
+                        onSelect={() => {
+                          setExerciseId(e.id);
+                          setComboboxOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                              "mr-2 h-4 w-4 shrink-0",
+                              exerciseId === e.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <span className="truncate flex-1">{getLocalizedName(e as any)}</span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </CommandDialog>
+            </>
           </div>
 
           {isCardio ? (
             <div className="grid grid-cols-3 gap-3">
-              <Field label="Tiempo (min)" value={minutes} onChange={setMinutes} invalid={isInvalid(minutes)} />
-              <Field label="Velocidad (km/h)" value={speed} onChange={setSpeed} step="0.1" invalid={isInvalid(speed)} />
-              <Field label="Inclinación (%)" value={incline} onChange={setIncline} step="0.5" invalid={isInvalid(incline)} />
+              <Field label={t("time_min")} value={minutes} onChange={setMinutes} invalid={isInvalid(minutes)} />
+              <Field label={t("speed_kmh")} value={speed} onChange={setSpeed} step="0.1" invalid={isInvalid(speed)} />
+              <Field label={t("incline_pct")} value={incline} onChange={setIncline} step="0.5" invalid={isInvalid(incline)} />
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-3">

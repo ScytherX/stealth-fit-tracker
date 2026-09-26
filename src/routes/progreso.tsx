@@ -19,8 +19,9 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { logVolume, useBodyWeights, useLogs } from "@/lib/gym-store";
+import { logVolume, useBodyWeights, useLogs, useLocalizedName, useExercises, useTranslation } from "@/lib/gym-store";
 import { ProgressStats } from "@/components/ProgressStats";
+import { MuscleHeatmap } from "@/components/MuscleHeatmap";
 
 export const Route = createFileRoute("/progreso")({
   head: () => ({
@@ -41,17 +42,20 @@ export const Route = createFileRoute("/progreso")({
   component: ProgresoPage,
 });
 
-type CardioMetric = "minutes" | "speed";
+type CardioMetric = "minutes" | "speed" | "peso" | "onerm";
 
 function ProgresoPage() {
   const { logs } = useLogs();
+  const { exercises } = useExercises();
+  const getLocalizedName = useLocalizedName();
+  const t = useTranslation();
   const { bodyWeights } = useBodyWeights();
   const [exerciseId, setExerciseId] = useState("");
   const [metric, setMetric] = useState<CardioMetric>("minutes");
 
   const options = useMemo(() => {
     const map = new Map<string, string>();
-    logs.forEach((l) => map.set(l.exerciseId, l.exerciseName));
+    logs.forEach((l) => map.set(l.exerciseId, getLocalizedName((exercises.find((e: any) => e.id === l.exerciseId) || l) as any)));
     return [...map.entries()].map(([id, name]) => ({ id, name }));
   }, [logs]);
 
@@ -71,11 +75,19 @@ function ProgresoPage() {
         }),
         peso: l.weight ?? 0,
         volumen: logVolume(l),
+        onerm: (l.reps ?? 0) === 1 ? (l.weight ?? 0) : (l.weight ?? 0) * (1 + (l.reps ?? 0) / 30),
         minutes: l.minutes ?? 0,
         speed: l.speed ?? 0,
         cardio: l.category === "Cardio",
       }));
   }, [logs, exerciseId]);
+
+  useEffect(() => {
+    if (series.length > 0) {
+      if (series[0]!.cardio && (metric === "peso" || metric === "onerm")) setMetric("minutes");
+      else if (!series[0]!.cardio && (metric === "minutes" || metric === "speed")) setMetric("peso");
+    }
+  }, [series, metric]);
 
   const bodySeries = useMemo(
     () =>
@@ -92,24 +104,30 @@ function ProgresoPage() {
   );
 
   const isCardio = series[0]?.cardio ?? false;
-  const dataKey = isCardio ? metric : "peso";
+  const dataKey = isCardio ? metric : (metric === "onerm" ? "onerm" : "volumen");
   const label = isCardio
     ? metric === "minutes"
       ? "Tiempo (min)"
       : "Velocidad (km/h)"
-    : "Peso (kg)";
+    : metric === "onerm"
+      ? "1RM Estimado (kg)"
+      : "Volumen (kg)";
 
   return (
     <main className="mx-auto w-full max-w-lg px-4 pt-8">
-      <h1 className="text-3xl font-extrabold">Progreso</h1>
+      <h1 className="text-3xl font-extrabold">{t("progress_title")}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Evolución de tu rendimiento a lo largo del tiempo.
       </p>
 
       <ProgressStats logs={logs} />
 
+      <div className="mt-6">
+        <MuscleHeatmap logs={logs} />
+      </div>
+
       <div className="mt-6 grid gap-2">
-        <Label>Ejercicio</Label>
+        <Label>{t("exercise")}</Label>
         <Select value={exerciseId} onValueChange={setExerciseId}>
           <SelectTrigger className="h-12 rounded-xl">
             <SelectValue placeholder="Sin registros todavía" />
@@ -124,7 +142,7 @@ function ProgresoPage() {
         </Select>
       </div>
 
-      {isCardio && (
+      {isCardio ? (
         <div className="mt-3 flex gap-2">
           <Button
             size="sm"
@@ -141,6 +159,25 @@ function ProgresoPage() {
             className="rounded-full"
           >
             Velocidad
+          </Button>
+        </div>
+      ) : (
+        <div className="mt-3 flex gap-2">
+          <Button
+            size="sm"
+            variant={metric === "peso" ? "default" : "secondary"}
+            onClick={() => setMetric("peso")}
+            className="rounded-full"
+          >
+            Volumen Total
+          </Button>
+          <Button
+            size="sm"
+            variant={metric === "onerm" ? "default" : "secondary"}
+            onClick={() => setMetric("onerm")}
+            className="rounded-full"
+          >
+            1RM Estimado
           </Button>
         </div>
       )}
@@ -184,17 +221,7 @@ function ProgresoPage() {
                   strokeWidth={3}
                   dot={{ r: 4, fill: "var(--primary)" }}
                 />
-                {!isCardio && (
-                  <Line
-                    type="monotone"
-                    dataKey="volumen"
-                    name="Volumen (kg)"
-                    stroke="var(--accent)"
-                    strokeWidth={2}
-                    strokeDasharray="4 4"
-                    dot={false}
-                  />
-                )}
+                
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -202,7 +229,7 @@ function ProgresoPage() {
       </section>
 
       <section className="mt-6 rounded-3xl border border-border bg-card p-4">
-        <h2 className="text-lg font-bold">Peso corporal</h2>
+        <h2 className="text-lg font-bold">{t("body_weight")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">
           Fluctuación de tu peso corporal a lo largo del tiempo.
         </p>

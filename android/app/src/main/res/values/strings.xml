@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Stealth Fit Tracker</string>
+    <string name="title_activity_main">Stealth Fit Tracker</string>
+    <string name="package_name">com.stealth.fittracker</string>
+    <string name="custom_url_scheme">com.stealth.fittracker</string>
+</resources>

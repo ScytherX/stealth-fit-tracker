@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 
-import { describeLog, useLogs } from "@/lib/gym-store";
+import { useTranslation, describeLog, useLogs } from "@/lib/gym-store";
 import { Button } from "@/components/ui/button";
 import { WorkoutCalendar } from "@/components/WorkoutCalendar";
 
@@ -37,6 +37,7 @@ function shiftDay(key: string, days: number) {
 }
 
 function DiaPage() {
+  const t = useTranslation();
   const { logs, removeLog } = useLogs();
   const [day, setDay] = useState(() => new Date().toISOString().slice(0, 10));
 
@@ -67,7 +68,7 @@ function DiaPage() {
 
   return (
     <main className="mx-auto w-full max-w-lg px-4 pt-8">
-      <h1 className="text-3xl font-extrabold">Registros del día</h1>
+      <h1 className="text-3xl font-extrabold">{t("day_records")}</h1>
       <p className="mt-1 text-sm capitalize text-muted-foreground">{title}</p>
 
       <div className="mt-6 flex items-center gap-2">

@@ -1,0 +1,86 @@
+--- src/routes/index.tsx
++++ src/routes/index.tsx
+@@ -52,6 +52,8 @@
+   const [newName, setNewName] = useState("");
+   const [newCategory, setNewCategory] = useState<Category>("Pecho");
+   const [dialogOpen, setDialogOpen] = useState(false);
++  const [exerciseSelectorOpen, setExerciseSelectorOpen] = useState(false);
++  const [searchQuery, setSearchQuery] = useState("");
+ 
+   const filtered = useMemo(
+     () => exercises.filter((e) => e.category === category),
+@@ -58,6 +60,11 @@
+     [exercises, category],
+   );
+ 
++  const visibleExercises = useMemo(() => {
++    const q = searchQuery.trim().toLowerCase();
++    return q ? filtered.filter(e => e.name.toLowerCase().includes(q)) : filtered;
++  }, [filtered, searchQuery]);
++
+   useEffect(() => {
+     // auto-select first exercise when category changes
+     if (filtered.length > 0 && !filtered.some((e) => e.id === exerciseId)) {
+@@ -194,16 +201,48 @@
+                   <DialogFooter>
+                     <Button onClick={handleCreateExercise}>Guardar ejercicio</Button>
+                   </DialogFooter>
+                 </DialogContent>
+               </Dialog>
+             </div>
+-            <Select value={exerciseId} onValueChange={setExerciseId}>
+-              <SelectTrigger className="h-12 rounded-xl">
+-                <SelectValue placeholder="Selecciona un ejercicio" />
+-              </SelectTrigger>
+-              <SelectContent>
+-                {filtered.map((e) => (
+-                  <SelectItem key={e.id} value={e.id}>
+-                    {e.name}
+-                  </SelectItem>
+-                ))}
+-              </SelectContent>
+-            </Select>
++            <Dialog open={exerciseSelectorOpen} onOpenChange={(open) => {
++              setExerciseSelectorOpen(open);
++              if (!open) setSearchQuery("");
++            }}>
++              <DialogTrigger asChild>
++                <Button variant="outline" className="h-12 w-full justify-start rounded-xl font-normal text-base">
++                  {exercises.find((e) => e.id === exerciseId)?.name || "Selecciona un ejercicio"}
++                </Button>
++              </DialogTrigger>
++              <DialogContent className="max-w-md w-[calc(100vw-1.5rem)] rounded-2xl p-4 sm:p-6 flex flex-col max-h-[85vh]">
++                <DialogHeader className="space-y-2 flex-shrink-0">
++                  <DialogTitle>Selecciona un ejercicio</DialogTitle>
++                  <Input 
++                    placeholder="Buscar ejercicio..." 
++                    value={searchQuery}
++                    onChange={(e) => setSearchQuery(e.target.value)}
++                    className="rounded-xl"
++                  />
++                </DialogHeader>
++                <div className="flex-1 overflow-y-auto min-h-[300px] mt-2 flex flex-col gap-1">
++                  {visibleExercises.length > 0 ? (
++                    visibleExercises.map((e) => (
++                      <button
++                        key={e.id}
++                        type="button"
++                        className={`text-left px-4 py-3 rounded-xl transition-colors ${e.id === exerciseId ? 'bg-primary text-primary-foreground font-semibold' : 'hover:bg-secondary'}`}
++                        onClick={() => {
++                          setExerciseId(e.id);
++                          setExerciseSelectorOpen(false);
++                          setSearchQuery("");
++                        }}
++                      >
++                        {e.name}
++                      </button>
++                    ))
++                  ) : (
++                    <p className="text-center text-sm text-muted-foreground mt-8">No se encontraron ejercicios.</p>
++                  )}
++                </div>
++              </DialogContent>
++            </Dialog>
+           </div>
+ 
+           {isCardio ? (

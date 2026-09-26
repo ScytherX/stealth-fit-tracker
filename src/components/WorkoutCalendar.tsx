@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { CATEGORIES, useLogs, type Category } from "@/lib/gym-store";
+import { CATEGORIES, useLogs, type Category , useTranslation } from "@/lib/gym-store";
 
 export const CATEGORY_DOT: Record<Category, string> = {
   Pecho: "bg-cat-pecho",
@@ -18,6 +18,7 @@ export const CATEGORY_DOT: Record<Category, string> = {
   Piernas: "bg-cat-piernas",
   Hombros: "bg-cat-hombros",
   Brazos: "bg-cat-brazos",
+  Abdomen: "bg-cat-abdomen",
   Cardio: "bg-cat-cardio",
 };
 
@@ -58,6 +59,7 @@ export function WorkoutCalendar({
   maxDate?: string;
   className?: string;
 }) {
+  const t = useTranslation();
   const { logs } = useLogs();
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => {
@@ -120,7 +122,7 @@ export function WorkoutCalendar({
       </DialogTrigger>
       <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md rounded-2xl p-4 sm:p-6">
         <DialogHeader className="space-y-0">
-          <DialogTitle className="text-base">Selecciona una fecha</DialogTitle>
+          <DialogTitle className="text-base">{t("select_date")}</DialogTitle>
         </DialogHeader>
         <div className="pointer-events-auto">
           <div className="flex items-center justify-between">

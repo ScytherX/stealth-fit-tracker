@@ -66,6 +66,7 @@
   --color-cat-piernas: var(--cat-piernas);
   --color-cat-hombros: var(--cat-hombros);
   --color-cat-brazos: var(--cat-brazos);
+  --color-cat-abdomen: var(--cat-abdomen);
   --color-cat-cardio: var(--cat-cardio);
 }
 
@@ -110,6 +111,7 @@
   --cat-piernas: oklch(1 0 0);
   --cat-hombros: oklch(0.7 0.2 320);
   --cat-brazos: oklch(0 0 0);
+  --cat-abdomen: oklch(0.8 0.17 85);
   --cat-cardio: oklch(0.68 0.19 350);
 }
 

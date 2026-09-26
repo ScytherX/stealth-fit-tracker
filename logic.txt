@@ -1,0 +1,85 @@
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportText = () => {
+    if (filtered.length === 0) return;
+    const text = filtered.map(l => `${new Date(l.date).toLocaleDateString()} - ${l.exerciseName}: ${describeLog(l as any)}`).join("\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "historial.txt";
+    a.click();
+  };
+
+  const handleExportPDF = () => {
+    if (filtered.length === 0) return;
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Historial de Entrenamiento", 10, 10);
+    doc.setFontSize(10);
+    let y = 20;
+    filtered.forEach((l) => {
+      if (y > 280) {
+        doc.addPage();
+        y = 10;
+      }
+      doc.text(`${new Date(l.date).toLocaleDateString()} - ${l.exerciseName}: ${describeLog(l as any)}`, 10, y);
+      y += 7;
+    });
+    doc.save("historial.pdf");
+  };
+
+  const handleExportImage = async () => {
+    if (filtered.length === 0) return;
+    const el = document.getElementById("historial-list");
+    if (!el) return;
+    try {
+      const canvas = await html2canvas(el);
+      const url = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "historial.png";
+      a.click();
+    } catch (e) {
+      console.error(e);
+      toast.error("Error al generar la imagen");
+    }
+  };
+
+  const parseImportedText = (text: string) => {
+    toast.success("Importación completada (simulada)", { description: "Texto leído correctamente: " + text.slice(0, 30) + "..."});
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    toast.info("Procesando archivo...");
+    try {
+      if (file.name.endsWith(".csv") || file.name.endsWith(".txt")) {
+        const text = await file.text();
+        parseImportedText(text);
+      } else if (file.name.endsWith(".pdf")) {
+        import("pdfjs-dist").then(async (pdfjs) => {
+          pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+          let text = "";
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            text += content.items.map((item: any) => item.str).join(" ") + "\n";
+          }
+          parseImportedText(text);
+        });
+      } else if (file.type.startsWith("image/")) {
+        import("tesseract.js").then(async (Tesseract) => {
+          const result = await Tesseract.default.recognize(file, "spa");
+          parseImportedText(result.data.text);
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al importar");
+    }
+  };

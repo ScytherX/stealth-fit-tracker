@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WorkoutCalendar } from "@/components/WorkoutCalendar";
-import { computeBMI, useBodyWeights } from "@/lib/gym-store";
+import { useTranslation, computeBMI, computeFFMI, useBodyWeights } from "@/lib/gym-store";
 
 export const Route = createFileRoute("/cuerpo")({
   head: () => ({
@@ -31,6 +31,7 @@ export const Route = createFileRoute("/cuerpo")({
 });
 
 function CuerpoPage() {
+  const t = useTranslation();
   const { bodyWeights, latest, addBodyWeight, removeBodyWeight } = useBodyWeights();
 
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -65,6 +66,7 @@ function CuerpoPage() {
   const bf = num(bodyFat);
   const mm = num(muscleMass);
   const bmi = w != null && h != null ? computeBMI(w, h) : undefined;
+  const ffmi = w != null && h != null && bf != null ? computeFFMI(w, h, bf) : undefined;
   const weightInvalid = weight.trim() !== "" && (w == null || w < 1);
   const heightInvalid = height.trim() !== "" && (h == null || h < 1);
   const bodyFatInvalid = bodyFat.trim() !== "" && (bf == null || bf < 1);
@@ -91,7 +93,7 @@ function CuerpoPage() {
       date: when.toISOString(),
       weight: w,
       height: h,
-      bmi,
+      ffmi,
       bodyFat: bf,
       muscleMass: mm,
     });
@@ -112,7 +114,7 @@ function CuerpoPage() {
       <section className="rounded-3xl border border-border bg-card p-5 shadow-lg">
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label>Fecha de la medición</Label>
+            <Label>{t("measurement_date")}</Label>
             <WorkoutCalendar value={date} onChange={setDate} maxDate={todayKey} />
           </div>
 
@@ -148,23 +150,25 @@ function CuerpoPage() {
           </div>
 
           <div className="rounded-xl border border-border bg-background px-4 py-3">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">IMC</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">{t("ffmi")}</p>
             <p className="text-2xl font-bold text-primary">
-              {bmi != null ? bmi : "—"}
-              {bmi != null && (
+              {ffmi != null ? ffmi : "—"}
+              {ffmi != null && (
                 <span className="ml-2 text-xs font-medium text-muted-foreground">
-                  {bmi < 18.5
-                    ? "Bajo peso"
-                    : bmi < 25
-                      ? "Normal"
-                      : bmi < 30
-                        ? "Sobrepeso"
-                        : "Obesidad"}
+                  {ffmi < 18
+                    ? "Bajo"
+                    : ffmi <= 20
+                      ? "Promedio"
+                      : ffmi <= 22
+                        ? "Bueno"
+                        : ffmi <= 25
+                          ? "Excelente"
+                          : "Límite natural superior"}
                 </span>
               )}
             </p>
             <p className="text-xs text-muted-foreground">
-              Se calcula con tu peso y altura.
+              Se calcula con tu peso, altura y grasa corporal.
             </p>
           </div>
 
@@ -193,7 +197,10 @@ function CuerpoPage() {
                   <p className="font-semibold">{b.weight} kg</p>
                   <p className="text-xs text-muted-foreground">
                     {[
-                      b.bmi != null ? `IMC ${b.bmi}` : null,
+                      (() => {
+                        const v = b.ffmi ?? (b.weight && b.height && b.bodyFat ? computeFFMI(b.weight, b.height, b.bodyFat) : null);
+                        return v != null ? `FFMI ${v}` : null;
+                      })(),
                       b.bodyFat != null ? `${b.bodyFat}% grasa` : null,
                       b.muscleMass != null ? `${b.muscleMass}% músculo` : null,
                     ]

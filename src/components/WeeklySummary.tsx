@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { CalendarCheck, TrendingUp, TrendingDown, Minus, Dumbbell } from "lucide-react";
 
-import { logVolume, type LogEntry } from "@/lib/gym-store";
+import { logVolume, type LogEntry , useTranslation } from "@/lib/gym-store";
 
 function dayKey(iso: string) {
   return new Date(iso).toLocaleDateString("sv-SE");
@@ -24,6 +24,7 @@ function weekRangeLabel(key: string) {
 }
 
 export function WeeklySummary({ logs }: { logs: LogEntry[] }) {
+  const t = useTranslation();
   const stats = useMemo(() => {
     const now = new Date();
     const todayKey = now.toLocaleDateString("sv-SE");
@@ -94,7 +95,7 @@ export function WeeklySummary({ logs }: { logs: LogEntry[] }) {
             <Dumbbell className="size-5" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Grupo más trabajado</p>
+            <p className="text-xs text-muted-foreground">{t("most_worked_group")}</p>
             <p className="font-semibold">{stats.topCategory[0]}</p>
           </div>
         </div>

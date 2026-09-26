@@ -4,14 +4,17 @@ import { Dumbbell, LineChart, History, CalendarDays, HeartPulse } from "lucide-r
 import { cn } from "@/lib/utils";
 
 const items = [
-  { to: "/", label: "Ejercicios", icon: Dumbbell },
-  { to: "/cuerpo", label: "Cuerpo", icon: HeartPulse },
-  { to: "/dia", label: "Por día", icon: CalendarDays },
-  { to: "/progreso", label: "Progreso", icon: LineChart },
-  { to: "/historial", label: "Historial", icon: History },
+  { to: "/", label: "nav_exercises", icon: Dumbbell },
+  { to: "/cuerpo", label: "nav_body", icon: HeartPulse },
+  { to: "/dia", label: "nav_by_day", icon: CalendarDays },
+  { to: "/progreso", label: "nav_progress", icon: LineChart },
+  { to: "/historial", label: "nav_history", icon: History },
 ] as const;
 
+import { useTranslation } from "@/lib/gym-store";
+
 export function AppHeader() {
+  const t = useTranslation();
   const currentPath = useRouterState({
     select: (router) => router.location.pathname,
   });
@@ -72,12 +75,16 @@ export function AppHeader() {
                     )}
                   >
                     <Icon className="size-5" />
-                    {label}
+                    {t(label as any)}
                   </Link>
                 </li>
               );
             })}
           </ul>
+
+          <div className="mt-8 px-4">
+            <LanguageSelector />
+          </div>
         </nav>
       </div>
 
@@ -88,6 +95,44 @@ export function AppHeader() {
         aria-hidden="true"
       />
     </>
+  );
+}
+
+import { useLanguage } from "../lib/gym-store";
+
+function LanguageSelector() {
+  const t = useTranslation();
+  const { lang, setLang } = useLanguage();
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        {t("language")}
+      </label>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setLang("es")}
+          className={cn(
+            "flex-1 rounded-xl py-2 text-sm font-medium transition-colors border",
+            lang === "es"
+              ? "bg-primary/10 border-primary text-primary"
+              : "border-border text-muted-foreground hover:bg-muted"
+          )}
+        >
+          Español
+        </button>
+        <button
+          onClick={() => setLang("en")}
+          className={cn(
+            "flex-1 rounded-xl py-2 text-sm font-medium transition-colors border",
+            lang === "en"
+              ? "bg-primary/10 border-primary text-primary"
+              : "border-border text-muted-foreground hover:bg-muted"
+          )}
+        >
+          English
+        </button>
+      </div>
+    </div>
   );
 }
 

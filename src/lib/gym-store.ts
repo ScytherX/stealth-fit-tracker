@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { dbRead, dbWrite } from "./db";
+import { DATASET_EXERCISES } from "./dataset";
 
-export type Category = "Pecho" | "Espalda" | "Piernas" | "Hombros" | "Brazos" | "Cardio";
+export type Category = "Pecho" | "Espalda" | "Piernas" | "Hombros" | "Brazos" | "Cardio" | "Abdomen";
 
 export const CATEGORIES: Category[] = [
   "Pecho",
@@ -8,12 +10,15 @@ export const CATEGORIES: Category[] = [
   "Piernas",
   "Hombros",
   "Brazos",
+  "Abdomen",
   "Cardio",
 ];
 
 export type Exercise = {
   id: string;
   name: string;
+  nameEs?: string;
+  nameEn?: string;
   category: Category;
   custom?: boolean;
 };
@@ -23,6 +28,8 @@ export type LogEntry = {
   date: string;
   exerciseId: string;
   exerciseName: string;
+  exerciseNameEs?: string;
+  exerciseNameEn?: string;
   category: Category;
   weight?: number | undefined;
   sets?: number | undefined;
@@ -32,18 +39,20 @@ export type LogEntry = {
   incline?: number | undefined;
   rest?: number | undefined;
   notes?: string | undefined;
+  rir?: number | undefined;
 };
 
-export const DEFAULT_EXERCISES: Exercise[] = [
-  { id: "press-banca", name: "Press de banca", category: "Pecho" },
-  { id: "aperturas", name: "Aperturas", category: "Pecho" },
-  { id: "fondos", name: "Fondos", category: "Pecho" },
-  { id: "dominadas", name: "Dominadas", category: "Espalda" },
-  { id: "remo-barra", name: "Remo con barra", category: "Espalda" },
-  { id: "jalon-pecho", name: "Jalón al pecho", category: "Espalda" },
-  { id: "sentadillas", name: "Sentadillas", category: "Piernas" },
-  { id: "prensa", name: "Prensa", category: "Piernas" },
-  { id: "peso-muerto-rumano", name: "Peso muerto rumano", category: "Piernas" },
+// Start with our basic ones, then append the dataset avoiding duplicates by id
+const baseExercises: Exercise[] = [
+  { id: "press-banca", name: "Press de banca", nameEn: "Bench Press", nameEs: "Press de banca", category: "Pecho" },
+  { id: "aperturas", name: "Aperturas", nameEn: "Chest Fly", nameEs: "Aperturas", category: "Pecho" },
+  { id: "fondos", name: "Fondos", nameEn: "Dips", nameEs: "Fondos", category: "Pecho" },
+  { id: "dominadas", name: "Dominadas", nameEn: "Pull-ups", nameEs: "Dominadas", category: "Espalda" },
+  { id: "remo-barra", name: "Remo con barra", nameEn: "Barbell Row", nameEs: "Remo con barra", category: "Espalda" },
+  { id: "jalon-pecho", name: "Jalón al pecho", nameEn: "Lat Pulldown", nameEs: "Jalón al pecho", category: "Espalda" },
+  { id: "sentadillas", name: "Sentadillas", nameEn: "Squats", nameEs: "Sentadillas", category: "Piernas" },
+  { id: "prensa", name: "Prensa", nameEn: "Leg Press", nameEs: "Prensa", category: "Piernas" },
+  { id: "peso-muerto-rumano", name: "Peso muerto rumano", nameEn: "Romanian Deadlift", nameEs: "Peso muerto rumano", category: "Piernas" },
   { id: "press-militar", name: "Press militar", category: "Hombros" },
   { id: "elevaciones-laterales", name: "Elevaciones laterales", category: "Hombros" },
   { id: "curl-biceps", name: "Curl de bíceps", category: "Brazos" },
@@ -51,40 +60,56 @@ export const DEFAULT_EXERCISES: Exercise[] = [
   { id: "caminadora", name: "Caminadora", category: "Cardio" },
 ];
 
+const baseIds = new Set(baseExercises.map(e => e.id));
+const uniqueDataset = DATASET_EXERCISES.filter(e => !baseIds.has(e.id));
+
+export const DEFAULT_EXERCISES: Exercise[] = [...baseExercises, ...uniqueDataset];
+
 const EX_KEY = "gymlog.customExercises.v1";
 const LOG_KEY = "gymlog.logs.v1";
 const ROUTINE_KEY = "gymlog.routines.v1";
 const BODYWEIGHT_KEY = "gymlog.bodyweights.v1";
-
-function read<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function write(key: string, value: unknown) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, JSON.stringify(value));
-  window.dispatchEvent(new CustomEvent("gymlog:change"));
-}
+const LANGUAGE_KEY = "gymlog.language.v1";
 
 export function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-function useStoreValue<T>(key: string, fallback: T): [T, (v: T) => void] {
+/**
+ * useStoreValue — React hook backed by IndexedDB.
+ *
+ * - Loads the initial value asynchronously from IndexedDB on mount.
+ * - Writes back to IndexedDB on every update.
+ * - Syncs across hook instances in the same tab via the "gymlog:change" event.
+ * - Syncs across tabs via the "storage" event.
+ */
+function useStoreValue<T>(key: string, fallback: T): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [value, setValue] = useState<T>(fallback);
+  const loadedRef = useRef(false);
 
   useEffect(() => {
-    const sync = () => setValue(read<T>(key, fallback));
-    sync();
+    let cancelled = false;
+
+    // Initial async load from IndexedDB
+    dbRead<T>(key, fallback).then((stored) => {
+      if (!cancelled) {
+        setValue(stored);
+        loadedRef.current = true;
+      }
+    });
+
+    // Re-read whenever any gymlog hook writes a change (same tab or other tab)
+    const sync = () => {
+      dbRead<T>(key, fallback).then((stored) => {
+        if (!cancelled) setValue(stored);
+      });
+    };
+
     window.addEventListener("gymlog:change", sync);
     window.addEventListener("storage", sync);
+
     return () => {
+      cancelled = true;
       window.removeEventListener("gymlog:change", sync);
       window.removeEventListener("storage", sync);
     };
@@ -92,9 +117,12 @@ function useStoreValue<T>(key: string, fallback: T): [T, (v: T) => void] {
   }, [key]);
 
   const set = useCallback(
-    (v: T) => {
-      write(key, v);
-      setValue(v);
+    (v: React.SetStateAction<T>) => {
+      setValue((prev) => {
+        const next = v instanceof Function ? (v as (prev: T) => T)(prev) : v;
+        void dbWrite(key, next);
+        return next;
+      });
     },
     [key],
   );
@@ -158,7 +186,8 @@ export function describeLog(l: LogEntry) {
   if (l.category === "Cardio") {
     return `${l.minutes ?? 0} min · ${l.speed ?? 0} km/h · ${l.incline ?? 0}% inclinación${rest}`;
   }
-  return `${l.weight ?? 0} kg · ${l.sets ?? 0} series × ${l.reps ?? 0} reps${rest}`;
+  const rirStr = l.rir != null ? ` · RIR ${l.rir}` : "";
+  return `${l.weight ?? 0} kg · ${l.sets ?? 0} series × ${l.reps ?? 0} reps${rirStr}${rest}`;
 }
 
 /** Volumen de un registro de fuerza: peso × series × reps (0 para cardio). */
@@ -174,6 +203,8 @@ export type RoutineItem = {
   id: string;
   exerciseId: string;
   exerciseName: string;
+  exerciseNameEs?: string;
+  exerciseNameEn?: string;
   category: Category;
   weight?: number | undefined;
   sets?: number | undefined;
@@ -182,6 +213,7 @@ export type RoutineItem = {
   speed?: number | undefined;
   incline?: number | undefined;
   rest?: number | undefined;
+  rir?: number | undefined;
 };
 
 export type Routine = {
@@ -195,17 +227,19 @@ export function useRoutines() {
 
   const saveRoutine = useCallback(
     (routine: Routine) => {
-      const exists = routines.some((r) => r.id === routine.id);
-      setRoutines(
-        exists ? routines.map((r) => (r.id === routine.id ? routine : r)) : [...routines, routine],
-      );
+      setRoutines((prev) => {
+        const exists = prev.some((r) => r.id === routine.id);
+        return exists
+          ? prev.map((r) => (r.id === routine.id ? routine : r))
+          : [...prev, routine];
+      });
     },
-    [routines, setRoutines],
+    [setRoutines],
   );
 
   const removeRoutine = useCallback(
-    (id: string) => setRoutines(routines.filter((r) => r.id !== id)),
-    [routines, setRoutines],
+    (id: string) => setRoutines((prev) => prev.filter((r) => r.id !== id)),
+    [setRoutines],
   );
 
   return { routines, saveRoutine, removeRoutine };
@@ -216,7 +250,8 @@ export function describeRoutineItem(i: RoutineItem) {
   if (i.category === "Cardio") {
     return `${i.minutes ?? 0} min · ${i.speed ?? 0} km/h · ${i.incline ?? 0}%${rest}`;
   }
-  return `${i.weight ?? 0} kg · ${i.sets ?? 0} × ${i.reps ?? 0}${rest}`;
+  const rirStr = i.rir != null ? ` · RIR ${i.rir}` : "";
+  return `${i.weight ?? 0} kg · ${i.sets ?? 0} × ${i.reps ?? 0}${rirStr}${rest}`;
 }
 
 export type BodyWeightEntry = {
@@ -227,6 +262,8 @@ export type BodyWeightEntry = {
   height?: number | undefined;
   /** Índice de masa corporal. */
   bmi?: number | undefined;
+  /** Índice de Masa Libre de Grasa. */
+  ffmi?: number | undefined;
   /** Grasa corporal en %. */
   bodyFat?: number | undefined;
   /** Masa muscular en kg. */
@@ -234,6 +271,14 @@ export type BodyWeightEntry = {
 };
 
 /** IMC = peso (kg) / altura (m)². */
+/** FFMI = masa magra (kg) / altura (m)². Masa magra = peso * (1 - grasa/100). */
+export function computeFFMI(weight: number, heightCm: number, bodyFat: number) {
+  if (!weight || !heightCm || !bodyFat) return undefined;
+  const m = heightCm / 100;
+  const leanMass = weight * (1 - bodyFat / 100);
+  return Math.round((leanMass / (m * m)) * 10) / 10;
+}
+
 export function computeBMI(weight: number, heightCm: number) {
   if (!weight || !heightCm) return undefined;
   const m = heightCm / 100;
@@ -299,4 +344,23 @@ export function downloadCSV(logs: LogEntry[], filename = "entrenamientos.csv") {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+export function useLanguage() {
+  const [lang, setLang] = useStoreValue<"es" | "en">(LANGUAGE_KEY, "es");
+  return { lang, setLang };
+}
+
+export function useLocalizedName() {
+  const { lang } = useLanguage();
+  return (exercise: { name: string; nameEs?: string; nameEn?: string }) => {
+    if (lang === "es") return exercise.nameEs || exercise.name;
+    if (lang === "en") return exercise.nameEn || exercise.name;
+    return exercise.name;
+  };
+}
+
+import { DICTIONARY, TranslationKey } from "./i18n";
+export function useTranslation() {
+  const { lang } = useLanguage();
+  return (key: TranslationKey) => DICTIONARY[lang][key] || key;
 }
